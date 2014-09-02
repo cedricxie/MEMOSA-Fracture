@@ -242,7 +242,7 @@ PFOuterTolerance = 1e-5
 PFIterFlag = 1                 #1--Do convergence test iteration; 0--No convergence test iteration
 
 PerfectRad = 0
-SymFlag = 0 # 1--Symmetric 0--Asymmetric
+SymFlag = 1 # 1--Symmetric 0--Asymmetric
 trace_change_threshold = 1e-8
 
 structure_file_name = "tecplotresult_structure-pmma-fiber" + ".dat"
@@ -1098,7 +1098,8 @@ for nstep in range(0,numSteps):
            #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            #eta1FieldsA[i]=Lamda_local[i]*PhaseFieldA[i]**2.0
            if SymFlag==1:
-               etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+               etaFieldsA[i]=G_local[i]
+               #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            #elif V_flag[i]==0:
            #    etaFieldsA[i]=G_local[i]

@@ -1477,12 +1477,13 @@ public:
       tractionZ[n][2] = wgPlusTranspose[2][2]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]
                         -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][2]*eigenvector1[n][2] + eigenvalue[n][1]*eigenvector2[n][2]*eigenvector2[n][2] + eigenvalue[n][2]*eigenvector3[n][2]*eigenvector3[n][2]);	  
       
-      if ((wg[0][0]+wg[1][1]+wg[2][2])>0){
+      //Stress terms corresponding to the source terms due to explicit Lambda terms
+      /*if ((wg[0][0]+wg[1][1]+wg[2][2])>0){
           tractionX[n][0] -= (1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
           tractionY[n][1] -= (1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
           tractionZ[n][2] -= (1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
       
-      }
+      }*/
             
 	  if(_options.residualStress)
 	  {
