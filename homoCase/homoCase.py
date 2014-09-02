@@ -24,7 +24,8 @@ import tecplotEntireStructureDomainPara
 import tecplotEntireFractureDomainPara
 
 def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,evalue1_positive,evalue2_positive,evalue3_positive,rank):
-    zeroThreshold=1e-15
+    zeroThreshold1=1e-14
+    zeroThreshold2=1e-3
     A=array([strX,strY,strZ])
     #print linalg.det(A),strX,strY,strZ,A[1][1]
     p1 = A[0][1]**2.0 + A[0][2]**2.0 + A[1][2]**2.0
@@ -55,15 +56,15 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,eval
 
 
     #print strX,strY,strZ,eig1,eig2,eig3
-    if fabs(eig1-eig2)<sqrt(zeroThreshold):
+    if fabs(eig1-eig2)<sqrt(zeroThreshold1):
         C1=(A-eig2*I).dot(A-eig3*I)
         C2=A-eig3*I
         C3=(A-eig1*I).dot(A-eig2*I)
-    elif fabs(eig1-eig3)<sqrt(zeroThreshold):
+    elif fabs(eig1-eig3)<sqrt(zeroThreshold1):
         C1=(A-eig2*I).dot(A-eig3*I)
         C2=(A-eig1*I).dot(A-eig3*I)
         C3=A-eig2*I
-    elif fabs(eig2-eig3)<sqrt(zeroThreshold):
+    elif fabs(eig2-eig3)<sqrt(zeroThreshold1):
         C1=(A-eig2*I).dot(A-eig3*I)
         C2=(A-eig1*I).dot(A-eig3*I)
         C3=A-eig1*I
@@ -73,19 +74,19 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,eval
         C3=(A-eig1*I).dot(A-eig2*I)
         
     P1=array([C1[0][0],C1[1][0],C1[2][0]])
-    if linalg.norm(P1)>zeroThreshold:
+    if linalg.norm(P1)>zeroThreshold1:
         P1=P1/linalg.norm(P1)
     else :
         P1=array([C1[0][1],C1[1][1],C1[2][1]])
-        if linalg.norm(P1)>zeroThreshold:
+        if linalg.norm(P1)>zeroThreshold1:
             P1=P1/linalg.norm(P1)
         else:
             P1=array([C1[0][2],C1[1][2],C1[2][2]])
-            if linalg.norm(P1)>zeroThreshold:
+            if linalg.norm(P1)>zeroThreshold1:
                 P1=P1/linalg.norm(P1)
             else:
                 P1=array([1,0,0])
-                if linalg.norm((A-eig1*I).dot(P1))>zeroThreshold and rank==0:
+                if linalg.norm((A-eig1*I).dot(P1))>zeroThreshold2 and rank==0:
                     print "CANNOT NOT DETERMINE EIGENVECTOR P1!"
                     print "Eigenvalue: ",eig1,eig2,eig3
                     print "A: ",A
@@ -96,25 +97,25 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,eval
                     sys.exit()
     P2_found_flag=0
     P2=array([C2[0][0],C2[1][0],C2[2][0]])   
-    if linalg.norm(P2)>zeroThreshold:
+    if linalg.norm(P2)>zeroThreshold1:
         P2=P2/linalg.norm(P2)
-        if P1.dot(P2)<zeroThreshold:
+        if P1.dot(P2)<zeroThreshold2:
             P2_found_flag=1
     if P2_found_flag==0 :
         P2=array([C2[0][1],C2[1][1],C2[2][1]])
-        if linalg.norm(P2)>zeroThreshold:
+        if linalg.norm(P2)>zeroThreshold1:
             P2=P2/linalg.norm(P2)
-            if P1.dot(P2)<zeroThreshold:
+            if P1.dot(P2)<zeroThreshold2:
                 P2_found_flag=1
     if P2_found_flag==0 :
         P2=array([C2[0][2],C2[1][2],C2[2][2]])
-        if linalg.norm(P2)>zeroThreshold:
+        if linalg.norm(P2)>zeroThreshold1:
             P2=P2/linalg.norm(P2)
-            if P1.dot(P2)<zeroThreshold:
+            if P1.dot(P2)<zeroThreshold2:
                 P2_found_flag=1
             else:
                 P2=array([0,1,0])
-                if linalg.norm((A-eig1*I).dot(P1))>zeroThreshold and rank==0:
+                if linalg.norm((A-eig1*I).dot(P1))>zeroThreshold2 and rank==0:
                     print "CANNOT NOT DETERMINE EIGENVECTOR P2!"
                     print "Eigenvalue: ",eig1,eig2,eig3
                     print "A: ",A
@@ -126,21 +127,21 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,eval
                     sys.exit()       
     P3_found_flag=0
     P3=array([C3[0][0],C3[1][0],C3[2][0]])   
-    if linalg.norm(P3)>zeroThreshold:
+    if linalg.norm(P3)>zeroThreshold1:
         P3=P3/linalg.norm(P3)
-        if P1.dot(P3)<zeroThreshold and P2.dot(P3)<zeroThreshold:
+        if P1.dot(P3)<zeroThreshold2 and P2.dot(P3)<zeroThreshold2:
             P3_found_flag=1
     if P3_found_flag==0 :
         P3=array([C3[0][1],C3[1][1],C3[2][1]])
-        if linalg.norm(P3)>zeroThreshold:
+        if linalg.norm(P3)>zeroThreshold1:
             P3=P3/linalg.norm(P3)
-            if P1.dot(P3)<zeroThreshold and P2.dot(P3)<zeroThreshold:
+            if P1.dot(P3)<zeroThreshold2 and P2.dot(P3)<zeroThreshold2:
                 P3_found_flag=1
     if P3_found_flag==0 :
         P3=array([C3[0][2],C3[1][2],C3[2][2]])
-        if linalg.norm(P3)>zeroThreshold:
+        if linalg.norm(P3)>zeroThreshold1:
             P3=P3/linalg.norm(P3)
-            if P1.dot(P3)<zeroThreshold and P2.dot(P3)<zeroThreshold:
+            if P1.dot(P3)<zeroThreshold2 and P2.dot(P3)<zeroThreshold2:
                 P3_found_flag=1
             elif rank==0:
                 print "CANNOT NOT DETERMINE EIGENVECTOR P3!"
