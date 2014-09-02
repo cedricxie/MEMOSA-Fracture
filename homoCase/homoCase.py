@@ -658,17 +658,28 @@ for nstep in range(0,numSteps):
                    deformation_z_inner[i] = deformFieldsA[i][2]
                struct_inner_flag[0] = 0
                smodel.advance(1)
+               
+               deformation_change_max[0]=0
                for i in range(0,Count):
-                   if (fabs((deformation_x_inner[i] - deformFieldsA[i][0])/DeformUnit) > StructTolerance )or\
-                   fabs((deformation_y_inner[i] - deformFieldsA[i][1])/DeformUnit) > StructTolerance or\
-                   fabs((deformation_z_inner[i] - deformFieldsA[i][2])/DeformUnit) > StructTolerance:
+                   if fabs((deformation_x_inner[i] - deformFieldsA[i][0])/DeformUnit) > StructTolerance and\
+                   fabs((deformation_x_inner[i] - deformFieldsA[i][0])/DeformUnit) > deformation_change_max[0]:
+                       deformation_change_max[0]=fabs((deformation_x_inner[i] - deformFieldsA[i][0])/DeformUnit)
                        struct_inner_flag[0] = 1
-
+                   if fabs((deformation_y_inner[i] - deformFieldsA[i][1])/DeformUnit) > StructTolerance and\
+                   fabs((deformation_y_inner[i] - deformFieldsA[i][1])/DeformUnit) > deformation_change_max[0]:
+                       deformation_change_max[0]=fabs((deformation_y_inner[i] - deformFieldsA[i][1])/DeformUnit)
+                       struct_inner_flag[0] = 1
+                   if fabs((deformation_z_inner[i] - deformFieldsA[i][2])/DeformUnit) > StructTolerance and\
+                   fabs((deformation_z_inner[i] - deformFieldsA[i][2])/DeformUnit) > deformation_change_max[0]:
+                       deformation_change_max[0]=fabs((deformation_z_inner[i] - deformFieldsA[i][2])/DeformUnit)
+                       struct_inner_flag[0] = 1
+               
+               MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[deformation_change_max, MPI.DOUBLE], op=MPI.MAX)
                MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[struct_inner_flag, MPI.DOUBLE], op=MPI.MAX)
                if rank_id==0:
                    if struct_inner_flag[0] == 1 :
-                       print "Structure inner loop keeps iterating ",(deformation_x_inner[i] - deformFieldsA[i][0])/DeformUnit,\
-                       (deformation_y_inner[i] - deformFieldsA[i][1])/DeformUnit,(deformation_z_inner[i] - deformFieldsA[i][2])/DeformUnit
+                       print "Structure inner loop keeps iterating ",deformation_change_max[0],\
+                       deformation_change_max[0]/DeformUnit,StructTolerance
                    if struct_inner_flag[0] == 0 :
                        print "Structure inner loop finished "
 ##########################################################################################
