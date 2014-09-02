@@ -499,7 +499,6 @@ Lamda_local = []
 G_local = []
 
 strain_trace = []
-vol_deformation = []
 ElasticEnergyField = []
 
 compress_found_flag  = array([0.0])
@@ -530,22 +529,30 @@ for n in range(0,nmesh):
     coordA=coord.asNumPyArray()
     volume=geomFields.volume[cellSitesLocal[n]]
     volumeA=volume.asNumPyArray()
+    etaFields = structureFields.eta[cellSitesLocal[n]]
+    etaFieldsA = etaFields.asNumPyArray() 
+    etaoldFields = structureFields.etaold[cellSitesLocal[n]]
+    etaoldFieldsA = etaoldFields.asNumPyArray() 
+    eta1Fields = structureFields.eta1[cellSitesLocal[n]]
+    eta1FieldsA = eta1Fields.asNumPyArray()
+    eta1oldFields = structureFields.eta1old[cellSitesLocal[n]]
+    eta1oldFieldsA = eta1oldFields.asNumPyArray()
     for i in range(0,Count):
-        EnergyHistoryField.append(0)
-        PFHistoryField.append(1.0)
 ################Pre-defined crack#####################
+        PFHistoryField.append(1.0)
         #if (coordA[i,0]-0.0)>0.0 and\
         #(coordA[i,0]-0.1/2.0)<0.0 and\
         #(coordA[i,1]-0.04/2.0+1e-4)>0.0 and\
         #(coordA[i,1]-0.04/2.0-1e-4)<0.0:
-        #    PFHistoryField[i]=0     
+        #    PFHistoryField[i]=0   
+################Forcing perfect region################  
         PFPerfectField.append(0.0)
-################Forcing perfect region################
         if (coordA[i,1]-0.0)**2.0<PerfectRad**2.0 or\
         (coordA[i,1]-4e-2)**2.0<PerfectRad**2.0:
         #(coordA[i,0]-0.0)**2.0+(coordA[i,1]-9e-6)**2.0<PerfectRad**2.0 or\
         #(coordA[i,0]-9e-6)**2.0+(coordA[i,1]-9e-6)**2.0<PerfectRad**2.0:
             PFPerfectField[i]=1
+
         PF_stored.append(0)
         PF_inner.append(0)
         DeformationHistoryX.append(0)
@@ -558,25 +565,40 @@ for n in range(0,nmesh):
         deformation_x_outer.append(0)
         deformation_y_outer.append(0)
         deformation_z_outer.append(0)
-        E_local.append(E)
-        nu_local.append(nu)
-        
         strain_trace.append(0)
-        vol_deformation.append(0)
         ElasticEnergyField.append(0)
+        EnergyHistoryField.append(0)
         
+        if PFHistoryField[i]==1.0:
+            E_local.append(E)
+            nu_local.append(nu)
+            K_local.append(\
+            #9.0*K*G/(3.0*K+4.0*G)
+            K
+            )
+            Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
+            G_local.append(E_local[i]/(2.*(1+nu_local[i])))
+        else :
+            E_local.append(E*(PFHistoryField[i]**2.0+StiffnessResidual))
+            nu_local.append(nu)
+            K_local.append(\
+            #9.0*K*G/(3.0*K+4.0*G)
+            K*(PFHistoryField[i]**2.0+StiffnessResidual)
+            )
+            Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i])*(PFHistoryField[i]**2.0+StiffnessResidual) )
+            G_local.append(E_local[i]/(2.*(1+nu_local[i]))*(PFHistoryField[i]**2.0+StiffnessResidual))
+            etaFieldsA[i]=G_local[i]
+            eta1FieldsA[i]=Lamda_local[i]
+            etaoldFieldsA[i]=G_local[i]
+            eta1oldFieldsA[i]=Lamda_local[i]
+
         for fiber_count in range(0,NumofFiber) :
             if((coordA[i,0]-fiber_x[fiber_count])**2+\
             (coordA[i,1]-fiber_y[fiber_count])**2)<fiber_r[fiber_count]**2:
                 E_local[i]=E_fiber
                 nu_local[i]=nu_fiber
                 fractureToughnessField[i]=cFED*100.0
-        K_local.append(\
-        #9.0*K*G/(3.0*K+4.0*G)
-        K
-        )
-        Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
-        G_local.append(E_local[i]/(2.*(1+nu_local[i])))
+
 ##########################################################################################
 # End of Model Initialization
 ##########################################################################################
@@ -704,14 +726,6 @@ for nstep in range(0,numSteps):
                strainYFieldsA = strainYFields .asNumPyArray() 
                strainZFields = structureFields.strainZ[cellSitesLocal[n]]
                strainZFieldsA = strainZFields.asNumPyArray()
-               etaFields = structureFields.eta[cellSitesLocal[n]]
-               etaFieldsA = etaFields.asNumPyArray() 
-               etaoldFields = structureFields.etaold[cellSitesLocal[n]]
-               etaoldFieldsA = etaoldFields.asNumPyArray() 
-               eta1Fields = structureFields.eta1[cellSitesLocal[n]]
-               eta1FieldsA = eta1Fields.asNumPyArray()
-               eta1oldFields = structureFields.eta1old[cellSitesLocal[n]]
-               eta1oldFieldsA = eta1oldFields.asNumPyArray()
         
                sourceField = fractureFields.source[cellSitesLocal[n]]
                sourceFieldA = sourceField.asNumPyArray()
@@ -888,12 +902,12 @@ for nstep in range(0,numSteps):
                    ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
                else: 
                    ElasticEnergyField[i] = G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
-               if i==100:
-                   print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
-                   print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
-                   print tractZFieldsA[i][2]
-                   print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
-                   #print tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i],V_flag[i]
+               #if i==100:
+               #    print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
+               #    print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
+               #    print tractZFieldsA[i][2]
+               #    print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
+               #    #print tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i],V_flag[i]
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + ((PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace)+K_local[i]/2.0*strain_trace_negative**2)*volumeA[i]
            
            Total_Compression_Elastic_Energy[0] = Total_Compression_Elastic_Energy[0] + K_local[i]/2.0*strain_trace_negative**2
@@ -1086,18 +1100,16 @@ for nstep in range(0,numSteps):
            if SymFlag==1:
                etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-           elif V_flag[i]==0:
-               etaFieldsA[i]=G_local[i]
-               #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-               #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-               eta1FieldsA[i]=Lamda_local[i]
-                   #if abs(PhaseFieldA[i]- PF_stored[i])>1e-2:
-                   #print "Phase Field @ Cell in Tension: ",rank_id,i,PhaseFieldA[i],PF_stored[i]," Deform X: ",deformFieldsA[i][0]," Deform Y: ",deformFieldsA[i][1]
+           #elif V_flag[i]==0:
+           #    etaFieldsA[i]=G_local[i]
+           #    eta1FieldsA[i]=Lamda_local[i]
+           #    #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+           #    #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            else :
                etaFieldsA[i]=G_local[i]
+               eta1FieldsA[i]=Lamda_local[i]
                #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-               eta1FieldsA[i]=Lamda_local[i]
                #eta1FieldsA[i]=Lamda_local[i]+G_local[i]*2.0/3.0*(1-(PhaseFieldA[i]**2.0+StiffnessResidual))
            pfvFieldsA[i]=PhaseFieldA[i]
 ##########################################################################################  
