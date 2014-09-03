@@ -23,7 +23,7 @@ from FluentCase import FluentCase
 import tecplotEntireStructureDomainPara
 import tecplotEntireFractureDomainPara
 
-def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,evalue1_positive,evalue2_positive,evalue3_positive,rank):
+def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,evalue1_positive,evalue2_positive,evalue3_positive,pfp_flag,rank):
     zeroThreshold1=1e-14
     zeroThreshold2=1e-3
     A=array([strX,strY,strZ])
@@ -171,6 +171,10 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,eval
     else:
         evalue[2]=eig3
         evalue3_positive[0] = eig3
+    if pfp_flag==-1:
+        evalue[0]=eig1
+        evalue[1]=eig2
+        evalue[2]=eig3
     evector1[0]=P1[0]
     evector1[1]=P1[1]
     evector1[2]=P1[2]
@@ -485,7 +489,6 @@ if NumofFiber!=0:
 
 EnergyHistoryField = []
 PFHistoryField = []
-PFPerfectField = []
 DeformationHistoryX = []
 DeformationHistoryY = []
 DeformationHistoryZ = []
@@ -544,6 +547,8 @@ for n in range(0,nmesh):
     eta1FieldsA = eta1Fields.asNumPyArray()
     eta1oldFields = structureFields.eta1old[cellSitesLocal[n]]
     eta1oldFieldsA = eta1oldFields.asNumPyArray()
+    pfperfectFields = structureFields.pfperfect[cellSitesLocal[n]]
+    pfperfectFieldsA = pfperfectFields.asNumPyArray()
     for i in range(0,Count):
 ################Pre-defined crack#####################
         PFHistoryField.append(1.0)
@@ -551,14 +556,14 @@ for n in range(0,nmesh):
         (coordA[i,0]-0.1/2.0)<0.0 and\
         (coordA[i,1]-0.04/2.0+1e-4)>0.0 and\
         (coordA[i,1]-0.04/2.0-1e-4)<0.0:
-            PFHistoryField[i]=0   
+            PFHistoryField[i]=0
+            pfperfectFieldsA[i]=-1   
 ################Forcing perfect region################  
-        PFPerfectField.append(0.0)
         if (coordA[i,1]-0.0)**2.0<PerfectRad**2.0 or\
         (coordA[i,1]-4e-2)**2.0<PerfectRad**2.0:
         #(coordA[i,0]-0.0)**2.0+(coordA[i,1]-9e-6)**2.0<PerfectRad**2.0 or\
         #(coordA[i,0]-9e-6)**2.0+(coordA[i,1]-9e-6)**2.0<PerfectRad**2.0:
-            PFPerfectField[i]=1
+            pfperfectFieldsA[i]=1
 
         PF_stored.append(0)
         PF_inner.append(0)
@@ -575,29 +580,15 @@ for n in range(0,nmesh):
         strain_trace.append(0)
         ElasticEnergyField.append(0)
         EnergyHistoryField.append(0)
-        
-        if PFHistoryField[i]==1.0:
-            E_local.append(E)
-            nu_local.append(nu)
-            K_local.append(\
-            #9.0*K*G/(3.0*K+4.0*G)
-            K
-            )
-            Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
-            G_local.append(E_local[i]/(2.*(1+nu_local[i])))
-        else :
-            E_local.append(E*(PFHistoryField[i]**2.0+StiffnessResidual))
-            nu_local.append(nu)
-            K_local.append(\
-            #9.0*K*G/(3.0*K+4.0*G)
-            K*(PFHistoryField[i]**2.0+StiffnessResidual)
-            )
-            Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i])*(PFHistoryField[i]**2.0+StiffnessResidual) )
-            G_local.append(E_local[i]/(2.*(1+nu_local[i]))*(PFHistoryField[i]**2.0+StiffnessResidual))
-            etaFieldsA[i]=G_local[i]
-            eta1FieldsA[i]=Lamda_local[i]
-            etaoldFieldsA[i]=G_local[i]
-            eta1oldFieldsA[i]=Lamda_local[i]
+
+        E_local.append(E)
+        nu_local.append(nu)
+        K_local.append(\
+        #9.0*K*G/(3.0*K+4.0*G)
+        K
+        )
+        Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
+        G_local.append(E_local[i]/(2.*(1+nu_local[i])))
 
         for fiber_count in range(0,NumofFiber) :
             if((coordA[i,0]-fiber_x[fiber_count])**2+\
@@ -870,7 +861,7 @@ for nstep in range(0,numSteps):
            eigenvalue2_positive=array([0.0])
            eigenvalue3_positive=array([0.0])
            
-           decomposeStrainTensor(strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i],eigenvalueFieldsA[i],eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i],eigenvalue1_positive,eigenvalue2_positive,eigenvalue3_positive,rank_id)
+           decomposeStrainTensor(strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i],eigenvalueFieldsA[i],eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i],eigenvalue1_positive,eigenvalue2_positive,eigenvalue3_positive,pfperfectFieldsA[i],rank_id)
            
            if strain_trace[i] > 0:
                strain_trace_positive=strain_trace[i]
@@ -1029,16 +1020,16 @@ for nstep in range(0,numSteps):
            for niter_PF in range(0,numPFIterations):
                for n in range(0,nmesh):
                    for i in range(0,Count):
-                       if PhaseFieldA[i]<PFPerfectField[i]:
-                           PhaseFieldA[i]=PFPerfectField[i]
+                       if PhaseFieldA[i]<pfperfectFieldsA[i]:
+                           PhaseFieldA[i]=pfperfectFieldsA[i]
                        if PhaseFieldA[i]>PFHistoryField[i]:
                            PhaseFieldA[i]=PFHistoryField[i]
                        sourceFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/cFED+1.0)*PhaseFieldA[i]
                tmodel.advance(1)
                
            for i in range(0,Count):
-               if PhaseFieldA[i]<PFPerfectField[i]:
-                   PhaseFieldA[i]=PFPerfectField[i]
+               if PhaseFieldA[i]<pfperfectFieldsA[i]:
+                   PhaseFieldA[i]=pfperfectFieldsA[i]
                if PhaseFieldA[i]>PFHistoryField[i]:
                    PhaseFieldA[i]=PFHistoryField[i]
                PF_inner[i]=PhaseFieldA[i]
@@ -1050,8 +1041,8 @@ for nstep in range(0,numSteps):
            
            fract_inner_flag[0] = 0
            for i in range(0,Count):
-               if PhaseFieldA[i]<PFPerfectField[i]:
-                   PhaseFieldA[i]=PFPerfectField[i]
+               if PhaseFieldA[i]<pfperfectFieldsA[i]:
+                   PhaseFieldA[i]=pfperfectFieldsA[i]
                if PhaseFieldA[i]>PFHistoryField[i]:
                    PhaseFieldA[i]=PFHistoryField[i]
                if abs(PF_inner[i]-PhaseFieldA[i])>PFTolerance:
