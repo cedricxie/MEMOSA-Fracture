@@ -154,19 +154,19 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,eval
                 print "P1,P2,P3: ",P1,P2,P3
                 sys.exit()   
     if eig1<0:
-        evalue[0]=0
+        evalue[0]=eig1
         evalue1_positive[0] = 0
     else:
         evalue[0]=eig1
         evalue1_positive[0] = eig1
     if eig2<0:
-        evalue[1]=0
+        evalue[1]=eig2
         evalue2_positive[0] = 0
     else:
         evalue[1]=eig2
         evalue2_positive[0] = eig2
     if eig3<0:
-        evalue[2]=0
+        evalue[2]=eig3
         evalue3_positive[0] = 0
     else:
         evalue[2]=eig3
@@ -224,7 +224,7 @@ NumofFiber = 0
 DeformUnit = (cFED*BoundaryPositionTop/Lamda)**0.5  #Normalized Displacement Unit
 #DispStep = 0.02*DeformUnit	   # Displacement Step
 DispStep = 1e-6
-StressStep = -2e6
+StressStep = -5e6
 LoadCoef = -0.5
 
 OInterval_s = 1                 #Output interval for equilibrium status
@@ -889,16 +889,19 @@ for nstep in range(0,numSteps):
                    ElasticEnergyField[i] = K_local[i]/2.0*strain_trace_negative**2+G_local[i]*strain_dev2_trace
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + (PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace[i]**2+G_local[i]*strain_dev2_trace)*volumeA[i]
            else:
-               if strain_trace[i] >0:
-                   ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
-               else: 
-                   ElasticEnergyField[i] = G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
-               #if i==100:
-               #    print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
-               #    print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
-               #    print tractZFieldsA[i][2]
-               #    print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
-               #    #print tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i],V_flag[i]
+               ElasticEnergyField[i] = 0
+               if ((2.0*G_local[i]+Lamda_local[i])*eigenvalueFieldsA[i][0] + Lamda_local[i]*eigenvalueFieldsA[i][1] + Lamda_local[i]*eigenvalueFieldsA[i][2]) > 0:
+                   ElasticEnergyField[i] = ElasticEnergyField[i] + 0.5*Lamda_local[i]*(((2.0*G_local[i]+Lamda_local[i])*eigenvalueFieldsA[i][0] + Lamda_local[i]*eigenvalueFieldsA[i][1] + Lamda_local[i]*eigenvalueFieldsA[i][2])/(2.0*G_local[i]+3.0*Lamda_local[i]))**2.0
+               if (Lamda_local[i]*eigenvalueFieldsA[i][0] + (2.0*G_local[i]+Lamda_local[i])*eigenvalueFieldsA[i][1] + Lamda_local[i]*eigenvalueFieldsA[i][2]) > 0:
+                   ElasticEnergyField[i] = ElasticEnergyField[i] + 0.5*Lamda_local[i]*((Lamda_local[i]*eigenvalueFieldsA[i][0] + (2.0*G_local[i]+Lamda_local[i])*eigenvalueFieldsA[i][1] + Lamda_local[i]*eigenvalueFieldsA[i][2])/(2.0*G_local[i]+3.0*Lamda_local[i]))**2.0
+               if (Lamda_local[i]*eigenvalueFieldsA[i][0] + Lamda_local[i]*eigenvalueFieldsA[i][1] + (2.0*G_local[i]+Lamda_local[i])*eigenvalueFieldsA[i][2]) > 0:
+                   ElasticEnergyField[i] = ElasticEnergyField[i] + 0.5*Lamda_local[i]*((Lamda_local[i]*eigenvalueFieldsA[i][0] + Lamda_local[i]*eigenvalueFieldsA[i][1] + (2.0*G_local[i]+Lamda_local[i])*eigenvalueFieldsA[i][2])/(2.0*G_local[i]+3.0*Lamda_local[i]))**2.0
+               if i==100:
+                   print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
+                   print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
+                   print tractZFieldsA[i][2]
+                   print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
+                   #print tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i],V_flag[i]
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + ((PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace)+K_local[i]/2.0*strain_trace_negative**2)*volumeA[i]
            
            Total_Compression_Elastic_Energy[0] = Total_Compression_Elastic_Energy[0] + K_local[i]/2.0*strain_trace_negative**2
