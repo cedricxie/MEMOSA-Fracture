@@ -1472,7 +1472,7 @@ public:
       tractionZ[n][1] = wgPlusTranspose[2][1]*eta[n];
       tractionZ[n][2] = wgPlusTranspose[2][2]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n];
       
-      if ( (2.0*etaold[n]+eta1old[n])*eigenvalue[n][0]+eta1old[n]*eigenvalue[n][1]+eta1old[n]*eigenvalue[n][2] > 0){
+      if ( (2.0*etaold[n]+eta1old[n])*eigenvalue[n][0]+eta1old[n]*eigenvalue[n][1]+eta1old[n]*eigenvalue[n][2] > 0 && pfperfect[n]!=-1){
           tractionX[n][0] -= eta1old[n]*(1-pfv[n]*pfv[n])*((2.0*etaold[n]+eta1old[n])*eigenvalue[n][0]+eta1old[n]*eigenvalue[n][1]+eta1old[n]*eigenvalue[n][2])/(2.0*etaold[n]+3.0*eta1old[n])/(2.0*etaold[n]+3.0*eta1old[n])
                              *((2.0*etaold[n]+eta1old[n])*eigenvector1[n][0]*eigenvector1[n][0] + etaold[n]*eigenvector2[n][0]*eigenvector2[n][0] + etaold[n]*eigenvector3[n][0]*eigenvector3[n][0]);
 	      tractionX[n][1] -= eta1old[n]*(1-pfv[n]*pfv[n])*((2.0*etaold[n]+eta1old[n])*eigenvalue[n][0]+eta1old[n]*eigenvalue[n][1]+eta1old[n]*eigenvalue[n][2])/(2.0*etaold[n]+3.0*eta1old[n])/(2.0*etaold[n]+3.0*eta1old[n])
@@ -1494,7 +1494,7 @@ public:
 	      tractionZ[n][2] -= eta1old[n]*(1-pfv[n]*pfv[n])*((2.0*etaold[n]+eta1old[n])*eigenvalue[n][0]+eta1old[n]*eigenvalue[n][1]+eta1old[n]*eigenvalue[n][2])/(2.0*etaold[n]+3.0*eta1old[n])/(2.0*etaold[n]+3.0*eta1old[n])
                              *((2.0*etaold[n]+eta1old[n])*eigenvector1[n][2]*eigenvector1[n][2] + etaold[n]*eigenvector2[n][2]*eigenvector2[n][2] + etaold[n]*eigenvector3[n][2]*eigenvector3[n][2]);	  
       }
-      if ( eta1old[n]*eigenvalue[n][0]+(2.0*etaold[n]+eta1old[n])*eigenvalue[n][1]+eta1old[n]*eigenvalue[n][2] > 0){
+      if ( eta1old[n]*eigenvalue[n][0]+(2.0*etaold[n]+eta1old[n])*eigenvalue[n][1]+eta1old[n]*eigenvalue[n][2] > 0 && pfperfect[n]!=-1){
           tractionX[n][0] -= eta1old[n]*(1-pfv[n]*pfv[n])*(eta1old[n]*eigenvalue[n][0]+(2.0*etaold[n]+eta1old[n])*eigenvalue[n][1]+eta1old[n]*eigenvalue[n][2])/(2.0*etaold[n]+3.0*eta1old[n])/(2.0*etaold[n]+3.0*eta1old[n])
                              *(etaold[n]*eigenvector1[n][0]*eigenvector1[n][0] + (2.0*etaold[n]+eta1old[n])*eigenvector2[n][0]*eigenvector2[n][0] + etaold[n]*eigenvector3[n][0]*eigenvector3[n][0]);
 	      tractionX[n][1] -= eta1old[n]*(1-pfv[n]*pfv[n])*(eta1old[n]*eigenvalue[n][0]+(2.0*etaold[n]+eta1old[n])*eigenvalue[n][1]+eta1old[n]*eigenvalue[n][2])/(2.0*etaold[n]+3.0*eta1old[n])/(2.0*etaold[n]+3.0*eta1old[n])
@@ -1516,7 +1516,7 @@ public:
 	      tractionZ[n][2] -= eta1old[n]*(1-pfv[n]*pfv[n])*(eta1old[n]*eigenvalue[n][0]+(2.0*etaold[n]+eta1old[n])*eigenvalue[n][1]+eta1old[n]*eigenvalue[n][2])/(2.0*etaold[n]+3.0*eta1old[n])/(2.0*etaold[n]+3.0*eta1old[n])
                              *(etaold[n]*eigenvector1[n][2]*eigenvector1[n][2] + (2.0*etaold[n]+eta1old[n])*eigenvector2[n][2]*eigenvector2[n][2] + etaold[n]*eigenvector3[n][2]*eigenvector3[n][2]);	  
       }   
-      if ( eta1old[n]*eigenvalue[n][0]+eta1old[n]*eigenvalue[n][1]+(2.0*etaold[n]+eta1old[n])*eigenvalue[n][2] > 0){
+      if ( eta1old[n]*eigenvalue[n][0]+eta1old[n]*eigenvalue[n][1]+(2.0*etaold[n]+eta1old[n])*eigenvalue[n][2] > 0 && pfperfect[n]!=-1){
           tractionX[n][0] -= eta1old[n]*(1-pfv[n]*pfv[n])*(eta1old[n]*eigenvalue[n][0]+eta1old[n]*eigenvalue[n][1]+(2.0*etaold[n]+eta1old[n])*eigenvalue[n][2])/(2.0*etaold[n]+3.0*eta1old[n])/(2.0*etaold[n]+3.0*eta1old[n])
                              *(etaold[n]*eigenvector1[n][0]*eigenvector1[n][0] + etaold[n]*eigenvector2[n][0]*eigenvector2[n][0] + (2.0*etaold[n]+eta1old[n])*eigenvector3[n][0]*eigenvector3[n][0]);
 	      tractionX[n][1] -= eta1old[n]*(1-pfv[n]*pfv[n])*(eta1old[n]*eigenvalue[n][0]+eta1old[n]*eigenvalue[n][1]+(2.0*etaold[n]+eta1old[n])*eigenvalue[n][2])/(2.0*etaold[n]+3.0*eta1old[n])/(2.0*etaold[n]+3.0*eta1old[n])
@@ -1538,6 +1538,21 @@ public:
 	      tractionZ[n][2] -= eta1old[n]*(1-pfv[n]*pfv[n])*(eta1old[n]*eigenvalue[n][0]+eta1old[n]*eigenvalue[n][1]+(2.0*etaold[n]+eta1old[n])*eigenvalue[n][2])/(2.0*etaold[n]+3.0*eta1old[n])/(2.0*etaold[n]+3.0*eta1old[n])
                              *(etaold[n]*eigenvector1[n][2]*eigenvector1[n][2] + etaold[n]*eigenvector2[n][2]*eigenvector2[n][2] + (2.0*etaold[n]+eta1old[n])*eigenvector3[n][2]*eigenvector3[n][2]);	  
       }  
+      
+      if (pfperfect[n]==-1){
+          tractionX[n][0] -= (1-pfv[n]*pfv[n])*wgPlusTranspose[0][0]*eta[n]+(1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
+	      tractionX[n][1] -= (1-pfv[n]*pfv[n])*wgPlusTranspose[0][1]*eta[n];
+	      tractionX[n][2] -= (1-pfv[n]*pfv[n])*wgPlusTranspose[0][2]*eta[n];
+	      
+	      tractionY[n][0] -= (1-pfv[n]*pfv[n])*wgPlusTranspose[1][0]*eta[n];
+          tractionY[n][1] -= (1-pfv[n]*pfv[n])*wgPlusTranspose[1][1]*eta[n]+(1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
+          tractionY[n][2] -= (1-pfv[n]*pfv[n])*wgPlusTranspose[1][2]*eta[n];
+          
+          tractionZ[n][0] -= (1-pfv[n]*pfv[n])*wgPlusTranspose[2][0]*eta[n];
+          tractionZ[n][1] -= (1-pfv[n]*pfv[n])*wgPlusTranspose[2][1]*eta[n];
+          tractionZ[n][2] -= (1-pfv[n]*pfv[n])*wgPlusTranspose[2][2]*eta[n]+(1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
+
+      }
             
 	  if(_options.residualStress)
 	  {

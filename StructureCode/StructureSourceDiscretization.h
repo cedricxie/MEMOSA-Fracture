@@ -271,7 +271,7 @@ public:
         faceTemperature = temperatureCell[c0]*wt0 + temperatureCell[c1]*wt1;
         faceEigenvalue = eigenvalueCell[c0]*wt0 + eigenvalueCell[c1]*wt1;
         
-        if ((2.0*faceMuOld+faceLambdaOld)*faceEigenvalue[0]+faceLambdaOld*faceEigenvalue[1]+faceLambdaOld*faceEigenvalue[2] >0 ){
+        if ((2.0*faceMuOld+faceLambdaOld)*faceEigenvalue[0]+faceLambdaOld*faceEigenvalue[1]+faceLambdaOld*faceEigenvalue[2] >0 && pfperfectCell[c0]!=-1 && pfperfectCell[c1]!=-1){
         
         faceEigenvalue11[0]=(2.0*muCell[c0]+lambdaCell[c0])*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector1Cell[c0][0]*eigenvector1Cell[c0][0]*wt0 + (2.0*muCell[c1]+lambdaCell[c1])*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector1Cell[c1][0]*eigenvector1Cell[c1][0]*wt1;
         faceEigenvalue11[1]=                     muCell[c0]*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector2Cell[c0][0]*eigenvector2Cell[c0][0]*wt0 +                      muCell[c1]*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector2Cell[c1][0]*eigenvector2Cell[c1][0]*wt1;
@@ -347,7 +347,7 @@ public:
            
         }
 
-        if (faceLambdaOld*faceEigenvalue[0]+(2.0*faceMuOld+faceLambdaOld)*faceEigenvalue[1]+faceLambdaOld*faceEigenvalue[2] >0 ){
+        if (faceLambdaOld*faceEigenvalue[0]+(2.0*faceMuOld+faceLambdaOld)*faceEigenvalue[1]+faceLambdaOld*faceEigenvalue[2] >0 && pfperfectCell[c0]!=-1 && pfperfectCell[c1]!=-1){
         
         faceEigenvalue11[0]=                     muCell[c0]*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector1Cell[c0][0]*eigenvector1Cell[c0][0]*wt0 +                      muCell[c1]*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector1Cell[c1][0]*eigenvector1Cell[c1][0]*wt1;
         faceEigenvalue11[1]=(2.0*muCell[c0]+lambdaCell[c0])*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector2Cell[c0][0]*eigenvector2Cell[c0][0]*wt0 + (2.0*muCell[c1]+lambdaCell[c1])*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector2Cell[c1][0]*eigenvector2Cell[c1][0]*wt1;
@@ -423,7 +423,7 @@ public:
            
         }
         
-        if (faceLambdaOld*faceEigenvalue[0]+faceLambdaOld*faceEigenvalue[1]+(2.0*faceMuOld+faceLambdaOld)*faceEigenvalue[2] >0 ){
+        if (faceLambdaOld*faceEigenvalue[0]+faceLambdaOld*faceEigenvalue[1]+(2.0*faceMuOld+faceLambdaOld)*faceEigenvalue[2] >0 && pfperfectCell[c0]!=-1 && pfperfectCell[c1]!=-1){
         
         faceEigenvalue11[0]=                     muCell[c0]*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector1Cell[c0][0]*eigenvector1Cell[c0][0]*wt0 +                      muCell[c1]*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector1Cell[c1][0]*eigenvector1Cell[c1][0]*wt1;
         faceEigenvalue11[1]=                     muCell[c0]*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector2Cell[c0][0]*eigenvector2Cell[c0][0]*wt0 +                      muCell[c1]*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector2Cell[c1][0]*eigenvector2Cell[c1][0]*wt1;
@@ -499,6 +499,7 @@ public:
            
         }
         
+        
 	const VGradType gradF = (vGradCell[c0]*wt0 + vGradCell[c1]*wt1);
 
 	VectorT3 source(NumTypeTraits<VectorT3>::getZero());
@@ -519,6 +520,64 @@ public:
 	source[2] = faceMu*(gradF[2][0]*Af[0] + gradF[2][1]*Af[1] + gradF[2][2]*Af[2])
           + faceLambda*divU*Af[2];
     
+    if (pfperfectCell[c0]==-1||pfperfectCell[c1]==-1){
+    
+        faceEigenvalue11[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][0]*eigenvector1Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][0]*eigenvector1Cell[c1][0]*wt1;
+        faceEigenvalue11[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][0]*eigenvector2Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][0]*eigenvector2Cell[c1][0]*wt1;
+        faceEigenvalue11[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][0]*eigenvector3Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][0]*eigenvector3Cell[c1][0]*wt1;
+
+        faceEigenvalue12[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][0]*eigenvector1Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][0]*eigenvector1Cell[c1][1]*wt1;
+        faceEigenvalue12[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][0]*eigenvector2Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][0]*eigenvector2Cell[c1][1]*wt1;
+        faceEigenvalue12[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][0]*eigenvector3Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][0]*eigenvector3Cell[c1][1]*wt1;
+
+        faceEigenvalue13[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][0]*eigenvector1Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][0]*eigenvector1Cell[c1][2]*wt1;
+        faceEigenvalue13[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][0]*eigenvector2Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][0]*eigenvector2Cell[c1][2]*wt1;
+        faceEigenvalue13[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][0]*eigenvector3Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][0]*eigenvector3Cell[c1][2]*wt1;
+            
+        faceEigenvalue21[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][1]*eigenvector1Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][1]*eigenvector1Cell[c1][0]*wt1;
+        faceEigenvalue21[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][1]*eigenvector2Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][1]*eigenvector2Cell[c1][0]*wt1;
+        faceEigenvalue21[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][1]*eigenvector3Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][1]*eigenvector3Cell[c1][0]*wt1;
+        
+        faceEigenvalue22[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][1]*eigenvector1Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][1]*eigenvector1Cell[c1][1]*wt1;
+        faceEigenvalue22[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][1]*eigenvector2Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][1]*eigenvector2Cell[c1][1]*wt1;
+        faceEigenvalue22[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][1]*eigenvector3Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][1]*eigenvector3Cell[c1][1]*wt1;
+        
+        faceEigenvalue23[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][1]*eigenvector1Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][1]*eigenvector1Cell[c1][2]*wt1;
+        faceEigenvalue23[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][1]*eigenvector2Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][1]*eigenvector2Cell[c1][2]*wt1;
+        faceEigenvalue23[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][1]*eigenvector3Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][1]*eigenvector3Cell[c1][2]*wt1;
+
+        faceEigenvalue31[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][2]*eigenvector1Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][2]*eigenvector1Cell[c1][0]*wt1;
+        faceEigenvalue31[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][2]*eigenvector2Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][2]*eigenvector2Cell[c1][0]*wt1;
+        faceEigenvalue31[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][2]*eigenvector3Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][2]*eigenvector3Cell[c1][0]*wt1;
+        
+        faceEigenvalue32[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][2]*eigenvector3Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][2]*eigenvector1Cell[c1][1]*wt1;
+        faceEigenvalue32[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][2]*eigenvector3Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][2]*eigenvector2Cell[c1][1]*wt1;
+        faceEigenvalue32[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][2]*eigenvector3Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][2]*eigenvector3Cell[c1][1]*wt1;
+        
+        faceEigenvalue33[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][2]*eigenvector3Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][2]*eigenvector1Cell[c1][2]*wt1;
+        faceEigenvalue33[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][2]*eigenvector3Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][2]*eigenvector2Cell[c1][2]*wt1;
+        faceEigenvalue33[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][2]*eigenvector3Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][2]*eigenvector3Cell[c1][2]*wt1;
+    
+        source[0] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[0];
+        source[1] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[1];
+        source[2] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[2];
+    
+    source[0] -= faceMuOld*(faceEigenvalue11[0]*Af[0] +faceEigenvalue11[1]*Af[0] + faceEigenvalue11[2]*Af[0]);
+    source[1] -= faceMuOld*(faceEigenvalue12[0]*Af[0] +faceEigenvalue12[1]*Af[0] + faceEigenvalue12[2]*Af[0]);
+    source[2] -= faceMuOld*(faceEigenvalue13[0]*Af[0] +faceEigenvalue13[1]*Af[0] + faceEigenvalue13[2]*Af[0]);
+
+    source[0] -= faceMuOld*(faceEigenvalue21[0]*Af[1] +faceEigenvalue21[1]*Af[1] + faceEigenvalue21[2]*Af[1]);
+    source[1] -= faceMuOld*(faceEigenvalue22[0]*Af[1] +faceEigenvalue22[1]*Af[1] + faceEigenvalue22[2]*Af[1]);
+    source[2] -= faceMuOld*(faceEigenvalue23[0]*Af[1] +faceEigenvalue23[1]*Af[1] + faceEigenvalue23[2]*Af[1]);
+    
+    source[0] -= faceMuOld*(faceEigenvalue31[0]*Af[2] +faceEigenvalue31[1]*Af[2] + faceEigenvalue31[2]*Af[2]);
+    source[1] -= faceMuOld*(faceEigenvalue32[0]*Af[2] +faceEigenvalue32[1]*Af[2] + faceEigenvalue32[2]*Af[2]);
+    source[2] -= faceMuOld*(faceEigenvalue33[0]*Af[2] +faceEigenvalue33[1]*Af[2] + faceEigenvalue33[2]*Af[2]);
+    
+    
+    }    
+    else {
+    
     source[0] -= faceLambdaOld/(2.0*faceMuOld+3.0*faceLambdaOld)/(2.0*faceMuOld+3.0*faceLambdaOld)*(faceEigenvalue11[0]*Af[0] +faceEigenvalue11[1]*Af[0] + faceEigenvalue11[2]*Af[0]);
     source[1] -= faceLambdaOld/(2.0*faceMuOld+3.0*faceLambdaOld)/(2.0*faceMuOld+3.0*faceLambdaOld)*(faceEigenvalue12[0]*Af[0] +faceEigenvalue12[1]*Af[0] + faceEigenvalue12[2]*Af[0]);
     source[2] -= faceLambdaOld/(2.0*faceMuOld+3.0*faceLambdaOld)/(2.0*faceMuOld+3.0*faceLambdaOld)*(faceEigenvalue13[0]*Af[0] +faceEigenvalue13[1]*Af[0] + faceEigenvalue13[2]*Af[0]);
@@ -529,8 +588,9 @@ public:
     
     source[0] -= faceLambdaOld/(2.0*faceMuOld+3.0*faceLambdaOld)/(2.0*faceMuOld+3.0*faceLambdaOld)*(faceEigenvalue31[0]*Af[2] +faceEigenvalue31[1]*Af[2] + faceEigenvalue31[2]*Af[2]);
     source[1] -= faceLambdaOld/(2.0*faceMuOld+3.0*faceLambdaOld)/(2.0*faceMuOld+3.0*faceLambdaOld)*(faceEigenvalue32[0]*Af[2] +faceEigenvalue32[1]*Af[2] + faceEigenvalue32[2]*Af[2]);
-    source[2] -= faceLambdaOld/(2.0*faceMuOld+3.0*faceLambdaOld)/(2.0*faceMuOld+3.0*faceLambdaOld)*(faceEigenvalue33[0]*Af[2] +faceEigenvalue33[1]*Af[2] + faceEigenvalue33[2]*Af[2]);
+    source[2] -= faceLambdaOld/(2.0*faceMuOld+3.0*faceLambdaOld)/(2.0*faceMuOld+3.0*faceLambdaOld)*(faceEigenvalue33[0]*Af[2] +faceEigenvalue33[1]*Af[2] + faceEigenvalue33[2]*Af[2]);    
     
+    }
     //printf("source term: %lf, %lf, %lf\n",source[0],source[1],source[2]);
 
 	if(_thermo)
