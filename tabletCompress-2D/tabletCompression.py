@@ -229,12 +229,12 @@ LoadCoef = 1.0
 
 OInterval_s = 1                 #Output interval for equilibrium status
 OInterval_l = 50
-MidOInterval_s = 1             #Output interval for intermediate status
+MidOInterval_s = 20             #Output interval for intermediate status
 MidOInterval_l = 50
 OPFLimit = 0.02
-OUpLimit=50                   #Upper Limit for large displacement step
+OUpLimit=0                   #Upper Limit for large displacement step
 DispReFactor=1.0               #Smaller displacement step is: 1/DispReFactor of larger displacement step
-MidIterUpLimit = 40
+MidIterUpLimit = 30
 
 StiffnessResidual = 1e-6       #Used to have a lower bound of the material constant for damaged cell
 StructTolerance = 1e-3         #Tolerance for structure model inner iteration
