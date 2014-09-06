@@ -44,6 +44,7 @@ public:
 				const Field& lambdaoldField,
 				const Field& alphaField,
 				const Field& pfvField,
+				const Field& pfperfectField,
 				const Field& eigenvalueField,
 				const Field& eigenvector1Field,
 				const Field& eigenvector2Field,
@@ -66,6 +67,7 @@ public:
     _lambdaoldField(lambdaoldField),
     _alphaField(alphaField),
     _pfvField(pfvField),
+    _pfperfectField(pfperfectField),
     _eigenvalueField(eigenvalueField),
     _eigenvector1Field(eigenvector1Field),
     _eigenvector2Field(eigenvector2Field),
@@ -162,6 +164,9 @@ public:
       
     const TArray& pfvCell =
       dynamic_cast<const TArray&>(_pfvField[cells]);
+      
+    const TArray& pfperfectCell =
+      dynamic_cast<const TArray&>(_pfperfectField[cells]);
       
     const VectorT3Array& eigenvalueCell =
       dynamic_cast<const VectorT3Array&>(_eigenvalueField[cells]);
@@ -334,7 +339,12 @@ public:
     
     //printf("source term: %lf, %lf, %lf\n",source[0],source[1],source[2]);
     
-    if (divU>0){
+    if (divU>0 && (pfperfectCell[c0]!=-1&&pfperfectCell[c1]!=-1)){
+        source[0] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[0];
+        source[1] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[1];
+        source[2] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[2];
+    }
+    if (pfperfectCell[c0]==-1||pfperfectCell[c1]==-1){
         source[0] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[0];
         source[1] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[1];
         source[2] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[2];
@@ -522,6 +532,7 @@ private:
   const Field& _lambdaoldField;
   const Field& _alphaField;
   const Field& _pfvField;
+  const Field& _pfperfectField;
   const Field& _eigenvalueField;
   const Field& _eigenvector1Field;
   const Field& _eigenvector2Field;

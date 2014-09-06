@@ -460,6 +460,10 @@ public:
         shared_ptr<TArray> pfvCell(new TArray(cells.getCountLevel1()));
         *pfvCell = vc["pfv"];
         _structureFields.pfv.addArray(cells,pfvCell);
+        
+        shared_ptr<TArray> pfperfectCell(new TArray(cells.getCountLevel1()));
+        *pfperfectCell = vc["pfperfect"];
+        _structureFields.pfperfect.addArray(cells,pfperfectCell);
 
         shared_ptr<TArray> tCell(new TArray(cells.getCountLevel1()));
         *tCell = _options["operatingTemperature"];
@@ -499,6 +503,7 @@ public:
      _structureFields.eta1old.syncLocal();
      _structureFields.alpha.syncLocal();
      _structureFields.pfv.syncLocal();
+      _structureFields.pfperfect.syncLocal();
      _structureFields.density.syncLocal();
      
      
@@ -1020,6 +1025,7 @@ public:
 	      _structureFields.eta1old,
 	      _structureFields.alpha,
 	      _structureFields.pfv,
+	      _structureFields.pfperfect,
 	      _structureFields.eigenvalue,
 	      _structureFields.eigenvector1,
 	      _structureFields.eigenvector2,
@@ -1432,6 +1438,7 @@ public:
       const TArray& eta1old = dynamic_cast<const TArray&>(_structureFields.eta1old[cells]);      
       
       const TArray& pfv = dynamic_cast<const TArray&>(_structureFields.pfv[cells]);
+      const TArray& pfperfect = dynamic_cast<const TArray&>(_structureFields.pfperfect[cells]);
       const VectorT3Array& eigenvalue = dynamic_cast<const VectorT3Array&>(_structureFields.eigenvalue[cells]);
       const VectorT3Array& eigenvector1 = dynamic_cast<const VectorT3Array&>(_structureFields.eigenvector1[cells]);
       const VectorT3Array& eigenvector2 = dynamic_cast<const VectorT3Array&>(_structureFields.eigenvector2[cells]);
@@ -1455,8 +1462,11 @@ public:
 	  
 	  tractionX[n][0] = wgPlusTranspose[0][0]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]
 	                    -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][0]);
-      //printf("ExtraPart in TractionXX:%lf,TractionXX Old: %lf,%lf, Sum: %lf\n",2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][0]),wgPlusTranspose[0][0]*eta[n],(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n], tractionX[n][0]);
-
+      
+      //printf("ExtraPart in TractionXX:%lf,%lf,%lf,%lf,%lf, %lf,TractionXX Old: %lf,%lf\n",pfv[n], etaold[n],eigenvalue[n][0],eigenvalue[n][1],eigenvalue[n][2],
+      //-2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][0]),
+      //wgPlusTranspose[0][0]*eta[n],(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]);
+    
 	  tractionX[n][1] = wgPlusTranspose[0][1]*eta[n]
 	                    -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][1]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][1]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][1]*eigenvector3[n][0]);
 	  tractionX[n][2] = wgPlusTranspose[0][2]*eta[n]
@@ -1467,9 +1477,9 @@ public:
       tractionY[n][1] = wgPlusTranspose[1][1]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]
                         -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][1]*eigenvector1[n][1] + eigenvalue[n][1]*eigenvector2[n][1]*eigenvector2[n][1] + eigenvalue[n][2]*eigenvector3[n][1]*eigenvector3[n][1]);
       //printf("ExtraPart in TractionYY:%lf, tractionYY Old: %lf,%lf, Sum: %lf\n",2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][1]*eigenvector1[n][1] + eigenvalue[n][1]*eigenvector2[n][1]*eigenvector2[n][1] + eigenvalue[n][2]*eigenvector3[n][1]*eigenvector3[n][1]),wgPlusTranspose[1][1]*eta[n],(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n],tractionY[n][1]);
-
       tractionY[n][2] = wgPlusTranspose[1][2]*eta[n]
                         -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][2]*eigenvector1[n][1] + eigenvalue[n][1]*eigenvector2[n][2]*eigenvector2[n][1] + eigenvalue[n][2]*eigenvector3[n][2]*eigenvector3[n][1]);
+      
       tractionZ[n][0] = wgPlusTranspose[2][0]*eta[n]
                         -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][2] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][2] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][2]);
       tractionZ[n][1] = wgPlusTranspose[2][1]*eta[n]
@@ -1477,12 +1487,19 @@ public:
       tractionZ[n][2] = wgPlusTranspose[2][2]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]
                         -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][2]*eigenvector1[n][2] + eigenvalue[n][1]*eigenvector2[n][2]*eigenvector2[n][2] + eigenvalue[n][2]*eigenvector3[n][2]*eigenvector3[n][2]);	  
       
-      if ((wg[0][0]+wg[1][1]+wg[2][2])>0){
+      if ((wg[0][0]+wg[1][1]+wg[2][2])>0 && pfperfect[n]!=-1){
           tractionX[n][0] -= (1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
           tractionY[n][1] -= (1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
           tractionZ[n][2] -= (1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
       
       }
+      if (pfperfect[n]==-1){
+          tractionX[n][0] -= (1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
+          //printf("ExtraPart2 in TractionXX:%lf\n",(1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]));
+          tractionY[n][1] -= (1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
+          tractionZ[n][2] -= (1-pfv[n]*pfv[n])*eta1old[n]*(wg[0][0]+wg[1][1]+wg[2][2]);
+      
+      }      
             
 	  if(_options.residualStress)
 	  {

@@ -44,6 +44,7 @@ struct StructureFields
   Field eigenvector1;
   Field eigenvector2;
   Field eigenvector3;
+  Field pfperfect;
 };
 
 #endif

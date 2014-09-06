@@ -196,44 +196,46 @@ i,pfp_flag,rank):
 
 ##########################################################################################   
 # parameter set up
- ##########################################################################################   
-#CrackBranch
-beamBot = 7
-beamLeft =  10
-beamRight = 4
-beamTop = 6
-beamFront_Left = 8
-beamFront_Right = 2
-beamBack_Left = 3
-beamBack_Right = 9
-IDs = (2, 3, 4, 6, 7, 8, 9, 10)
-BoundaryPositionTop = 4e-2-1e-4 #Top
-BoundaryPositionRight = 1e-1-1e-4 #Right
-BoundaryPositionLeft = 45e-3/10.0
-BoundaryPositionBottom = 1e-4
+ ########################################################################################## 
+#lcrack-1mm-2D
+beamBot = 8
+beamLeft_Top =  3
+beamLeft_Mid =  9
+beamLeft_Bot =  7
+beamRight_Top = 4
+beamRight_Mid = 10
+beamRight_Bot = 6
+beamTop = 5
+IDs = (3, 4, 5, 6, 7, 8, 9, 10)
+BoundaryPositionTop = 1.0e-3-1.0e-3/20.0 #Top
+BoundaryPositionRight = 1.0e-3-1.0e-3/500.0 #Right
+BoundaryPositionLeft = 1.0e-3/500.0
+BoundaryPositionBottom = 1.0e-3/20.0
+
 
 # Set Parameters
-numSteps = 30			   # Number of Steps
+numSteps = 5			   # Number of Steps
 timeStep = 3600                # Size of timestep (seconds)
 numtimeSteps = 1               # Number of timesteps in global combined solution
 numStructIterations = 20       # Number of iterations for structure model, automatically set to 1 when StructIterFlag == 0
 numPFIterations = 10           # Number of iterations for fracture model
-E = 32e9                    # Matrix Young's Modulus
+E = 210e9                    # Matrix Young's Modulus
 E_fiber=19.5e9                 # Fiber Young's Modulus
-nu = 0.2                      # Matrix Poisson's ratio
+nu = 0.3                      # Matrix Poisson's ratio
 nu_fiber=0.28                  # Fiber Poisson's ratio
 G = E/2.0/(1+nu)               # Shear Modulus
 K = E/3.0/(1-2.0*nu)
-Lamda = nu*E/(1+nu)/(1-2.0*nu) # Lamda
+Lamda = nu*E/(1+nu)/(1-1.0*nu) # Lamda
 Ac =0                          # Creep coefficient 1/hr
-cFED = 3                     # critical fracture energy density, J/m^2
-cLoC=  2.5e-4                    # model parameter controlling the width of the smooth approximation of the crack, m
+cFED = 2700                    # critical fracture energy density, J/m^2
+cLoC=  0.75e-5                    # model parameter controlling the width of the smooth approximation of the crack, m
 Diff = 4.0*cLoC*cLoC           # fracture Conductivity Coefficient
 crackPF = 1e-3			       # Phase Field Value at Crack
 NumofFiber = 0
 
 DeformUnit = (cFED*BoundaryPositionTop/Lamda)**0.5  #Normalized Displacement Unit
-DispStep = 0.02*DeformUnit	   # Displacement Step
+#DispStep = 0.02*DeformUnit	   # Displacement Step
+DispStep = 1e-8
 StressStep = 1e6
 
 OInterval_s = 1                 #Output interval for equilibrium status
@@ -241,14 +243,14 @@ OInterval_l = 50
 MidOInterval_s = 1              #Output interval for intermediate status
 MidOInterval_l = 50
 OPFLimit = 0.02
-OUpLimit=0                     #Upper Limit for large displacement step
+OUpLimit=500                   #Upper Limit for large displacement step
 DispReFactor=1.0               #Smaller displacement step is: 1/DispReFactor of larger displacement step
 MidIterUpLimit = 200
 
-StiffnessResidual = 2e-4       #Used to have a lower bound of the material constant for damaged cell
+StiffnessResidual = 1e-5       #Used to have a lower bound of the material constant for damaged cell
 StructTolerance = 1e-5         #Tolerance for structure model inner iteration
 StructOuterTolerance = 1e-5
-StructIterFlag = 1             #1--Do structure model iteration; 0--No structure model iteration
+StructIterFlag = 0             #1--Do structure model iteration; 0--No structure model iteration
 StructIterUpLimit = 80
 
 PFTolerance = 1e-4             #Tolerance for fracture model iteration
@@ -341,65 +343,55 @@ for vc in vcMap.values():
     vc.setVar('fractureConductivity',Diff)
 
 StructurebcMap = smodel.getBCMap()
-for id in [beamRight]:
+
+for id in [beamRight_Top]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        bc.bcType = 'SpecifiedDeformation'
-        bc['specifiedXDeformation'] = 0
-        bc['specifiedYDeformation'] = 0
-        bc['specifiedZDeformation'] = 0
-        #bc.bcType = 'Symmetry'
+        bc.bcType = 'Symmetry'
         #bc.bcType = 'SpecifiedTraction'
         #bc['specifiedXXTraction'] = 0
         #bc['specifiedYXTraction'] = 0
         #bc['specifiedZXTraction'] = 0
+for id in [beamRight_Mid]:
+    if id in StructurebcMap:
+        bc = StructurebcMap[id]
+        bc.bcType = 'Symmetry'
+for id in [beamRight_Bot]:
+    if id in StructurebcMap:
+        bc = StructurebcMap[id]
+        bc.bcType = 'Symmetry'
 for id in [beamTop]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        bc.bcType = 'SpecifiedTraction'
-        bc['specifiedXYTraction'] = 0
-        bc['specifiedYYTraction'] = 0
-        bc['specifiedZYTraction'] = 0
+        #bc.bcType = 'SpecifiedTraction'
+        #bc['specifiedXYTraction'] = 0
+        #bc['specifiedYYTraction'] = 0
+        #bc['specifiedZYTraction'] = 0
+        bc.bcType = 'SpecifiedDeformation'
+        bc['specifiedXDeformation'] = 0
+        bc['specifiedYDeformation'] = 0
+        bc['specifiedZDeformation'] = 0
 for id in [beamBot]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        #bc.bcType = 'Symmetry'
-        bc.bcType = 'SpecifiedTraction'
-        bc['specifiedXYTraction'] = 0
-        bc['specifiedYYTraction'] = 0
-        bc['specifiedZYTraction'] = 0
+        #bc.bcType = 'SpecifiedTraction'
+        #bc['specifiedXXTraction'] = 0
+        #bc['specifiedYXTraction'] = 0
+        #bc['specifiedZXTraction'] = 0
+        bc.bcType = 'Symmetry'
         #bc.bcType = 'SpecifiedDeformation'
         #bc['specifiedXDeformation'] = 0
         #bc['specifiedYDeformation'] = 0
         #bc['specifiedZDeformation'] = 0
-for id in [beamLeft]:
-    if id in StructurebcMap:
-        bc = StructurebcMap[id]
-        bc.bcType = 'SpecifiedTraction'
-        bc['specifiedXXTraction'] = 0
-        bc['specifiedYXTraction'] = 0
-        bc['specifiedZXTraction'] = 0
-for id in [beamFront_Left]:
+for id in [beamLeft_Top]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
         bc.bcType = 'Symmetry'
-        #bc.bcType = 'SpecifiedTraction'
-        #bc['specifiedXZTraction'] = 0
-        #bc['specifiedYZTraction'] = 0
-        #bc['specifiedZZTraction'] = 0
-for id in [beamFront_Right]:
-    if id in StructurebcMap:
-        bc = StructurebcMap[id]
-        bc.bcType = 'Symmetry'      
-for id in [beamBack_Left]:
+for id in [beamLeft_Mid]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
         bc.bcType = 'Symmetry'
-        #bc.bcType = 'SpecifiedTraction'
-        #bc['specifiedXZTraction'] = 0
-        #bc['specifiedYZTraction'] = 0
-        #bc['specifiedZZTraction'] = 0
-for id in [beamBack_Right]:
+for id in [beamLeft_Bot]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
         bc.bcType = 'Symmetry'
@@ -409,9 +401,9 @@ vcMap = smodel.getVCMap()
 for i,vc in vcMap.iteritems():
     vc['density'] = 8912
     vc['eta'] = E/(2.*(1+nu))
-    vc['eta1'] = nu*E/((1+nu)*(1-2.0*nu))
+    vc['eta1'] = nu*E/((1+nu)*(1-1.0*nu))
     vc['etaold'] = E/(2.*(1+nu))
-    vc['eta1old'] = nu*E/((1+nu)*(1-2.0*nu))
+    vc['eta1old'] = nu*E/((1+nu)*(1-1.0*nu))
     vc['pfv'] = 1.0
 ##########################################################################################
 #End of the boundary conditions set up
@@ -567,12 +559,13 @@ for n in range(0,nmesh):
 ################Pre-defined crack#####################
         PFHistoryField.append(1.0)
         if (coordA[i,0]-0.0)>0.0 and\
-        (coordA[i,0]-0.1/2.0)<0.0 and\
-        (coordA[i,1]-0.04/2.0+1e-4)>0.0 and\
-        (coordA[i,1]-0.04/2.0-1e-4)<0.0:
-            PFHistoryField[i]=0   
+        (coordA[i,0]-0.001/2.0)<0.0 and\
+        (coordA[i,1]-0.001/2.0+0.001/100.0/0.5)>0.0 and\
+        (coordA[i,1]-0.001/2.0-0.001/100.0/0.5)<0.0:
+            PFHistoryField[i]=0.0   
             pfperfectFieldsA[i]=-1
-            pfvFieldsA[i]=0
+            pfvFieldsA[i]=0.0
+            PhaseFieldA[i]=0.0
 ################Forcing perfect region################  
         if (coordA[i,1]-0.0)**2.0<PerfectRad**2.0 or\
         (coordA[i,1]-4e-2)**2.0<PerfectRad**2.0:
@@ -599,10 +592,10 @@ for n in range(0,nmesh):
         E_local.append(E)
         nu_local.append(nu)
         K_local.append(\
-        #9.0*K*G/(3.0*K+4.0*G)
-        K
+        9.0*K*G/(3.0*K+4.0*G)
+        #K
         )
-        Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
+        Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-1.0*nu_local[i]) )
         G_local.append(E_local[i]/(2.*(1+nu_local[i])))
 
         for fiber_count in range(0,NumofFiber) :
@@ -632,11 +625,9 @@ for nstep in range(0,numSteps):
    for id in [beamTop]:
        if id in StructurebcMap:
            bc = StructurebcMap[id]
-           bc['specifiedYYTraction'] = StressStep
-   for id in [beamBot]:
-       if id in StructurebcMap:
-           bc = StructurebcMap[id]
-           bc['specifiedYYTraction'] = StressStep
+           bc['specifiedYDeformation'] = Displacement
+           #bc['specifiedYYTraction'] = ExternalStress
+
 ##########################################################################################
 # Start of Middle Loop Iteration
 ##########################################################################################           
@@ -908,11 +899,11 @@ for nstep in range(0,numSteps):
                    ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
                else: 
                    ElasticEnergyField[i] = G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
-               #if i==100:
-               #    print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
-               #    print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
-               #    print tractZFieldsA[i][2]
-               #    print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
+               if i==100:
+                   print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
+                   print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
+                   print tractZFieldsA[i][2]
+                   print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
                #    #print tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i],V_flag[i]
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + ((PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace)+K_local[i]/2.0*strain_trace_negative**2)*volumeA[i]
            
