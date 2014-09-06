@@ -23,7 +23,8 @@ from FluentCase import FluentCase
 import tecplotEntireStructureDomainPara
 import tecplotEntireFractureDomainPara
 
-def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,evalue1_positive,evalue2_positive,evalue3_positive,pfp_flag,rank):
+def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,evalue1_positive,evalue2_positive,evalue3_positive,\
+i,pfp_flag,rank):
     zeroThreshold1=1e-14
     zeroThreshold2=1e-3
     A=array([strX,strY,strZ])
@@ -184,6 +185,14 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,eval
     evector3[0]=P3[0]
     evector3[1]=P3[1]
     evector3[2]=P3[2]
+    
+    if i==100:
+        print "Eigenvalue: ",eig1,eig2,eig3
+        print "A: ",A
+        print "C1: ",C1
+        print "C2: ",C2
+        print "C3: ",C3
+        print "P1,P2,P3: ",P1,P2,P3
 
 ##########################################################################################   
 # parameter set up
@@ -239,7 +248,8 @@ MidIterUpLimit = 200
 StiffnessResidual = 1e-6       #Used to have a lower bound of the material constant for damaged cell
 StructTolerance = 1e-3         #Tolerance for structure model inner iteration
 StructOuterTolerance = 1e-3
-StructIterFlag = 1             #1--Do structure model iteration; 0--No structure model iteration
+StructIterFlag = 0             #1--Do structure model iteration; 0--No structure model iteration
+StructIterUpLimit = 80
 
 PFTolerance = 1e-5             #Tolerance for fracture model iteration
 PFOuterTolerance = 1e-5
@@ -542,6 +552,10 @@ for n in range(0,nmesh):
     eta1oldFieldsA = eta1oldFields.asNumPyArray()
     pfperfectFields = structureFields.pfperfect[cellSitesLocal[n]]
     pfperfectFieldsA = pfperfectFields.asNumPyArray()
+    pfvFields = structureFields.pfv[cellSitesLocal[n]]
+    pfvFieldsA = pfvFields.asNumPyArray()
+    PhaseField = fractureFields.phasefieldvalue[cellSitesLocal[n]]
+    PhaseFieldA = PhaseField.asNumPyArray()
     for i in range(0,Count):
 ################Pre-defined crack#####################
         PFHistoryField.append(1.0)
@@ -550,7 +564,10 @@ for n in range(0,nmesh):
         #(coordA[i,1]-0.04/2.0+1e-4)>0.0 and\
         #(coordA[i,1]-0.04/2.0-1e-4)<0.0:
         #    PFHistoryField[i]=0 
-        #    pfperfectFieldsA[i]=-1  
+        #    pfperfectFieldsA[i]=-1 
+        PFHistoryField[i]=0.5
+        pfperfectFieldsA[i]=-1 
+        pfvFieldsA[i]=0.5
 ################Forcing perfect region################  
         if (coordA[i,1]-0.0)**2.0<PerfectRad**2.0 or\
         (coordA[i,1]-4e-2)**2.0<PerfectRad**2.0:
@@ -673,28 +690,33 @@ for nstep in range(0,numSteps):
                smodel.advance(1)
                
                deformation_change_max[0]=0
+               deformation_change_maxi=0
                for i in range(0,Count):
-                   if fabs((deformation_x_inner[i] - deformFieldsA[i][0])/DeformUnit) > StructTolerance and\
-                   fabs((deformation_x_inner[i] - deformFieldsA[i][0])/DeformUnit) > deformation_change_max[0]:
-                       deformation_change_max[0]=fabs((deformation_x_inner[i] - deformFieldsA[i][0])/DeformUnit)
+                   if fabs((deformation_x_inner[i] - deformFieldsA[i][0])/DeformUnit) > StructTolerance :
                        struct_inner_flag[0] = 1
-                   if fabs((deformation_y_inner[i] - deformFieldsA[i][1])/DeformUnit) > StructTolerance and\
-                   fabs((deformation_y_inner[i] - deformFieldsA[i][1])/DeformUnit) > deformation_change_max[0]:
-                       deformation_change_max[0]=fabs((deformation_y_inner[i] - deformFieldsA[i][1])/DeformUnit)
+                   if fabs(deformation_x_inner[i] - deformFieldsA[i][0]) > deformation_change_max[0]:
+                       deformation_change_max[0]=fabs(deformation_x_inner[i] - deformFieldsA[i][0])
+                       deformation_change_maxi=i
+                   if fabs((deformation_y_inner[i] - deformFieldsA[i][1])/DeformUnit) > StructTolerance :
                        struct_inner_flag[0] = 1
-                   if fabs((deformation_z_inner[i] - deformFieldsA[i][2])/DeformUnit) > StructTolerance and\
-                   fabs((deformation_z_inner[i] - deformFieldsA[i][2])/DeformUnit) > deformation_change_max[0]:
-                       deformation_change_max[0]=fabs((deformation_z_inner[i] - deformFieldsA[i][2])/DeformUnit)
+                   if fabs(deformation_y_inner[i] - deformFieldsA[i][1]) > deformation_change_max[0]:
+                       deformation_change_max[0]=fabs(deformation_y_inner[i] - deformFieldsA[i][1])
+                       deformation_change_maxi=i
+                   if fabs((deformation_z_inner[i] - deformFieldsA[i][2])/DeformUnit) > StructTolerance :
                        struct_inner_flag[0] = 1
+                   if fabs(deformation_z_inner[i] - deformFieldsA[i][2]) > deformation_change_max[0]:
+                       deformation_change_max[0]=fabs(deformation_z_inner[i] - deformFieldsA[i][2])
+                       deformation_change_maxi=i
                
                MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[deformation_change_max, MPI.DOUBLE], op=MPI.MAX)
                MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[struct_inner_flag, MPI.DOUBLE], op=MPI.MAX)
                if rank_id==0:
                    if struct_inner_flag[0] == 1 :
-                       print "Structure inner loop keeps iterating ",deformation_change_max[0],\
-                       deformation_change_max[0]/DeformUnit,StructTolerance
+                       print "Structure inner loop keeps iterating ",deformation_change_max[0],deformation_change_max[0]/DeformUnit,StructTolerance,\
+                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1]
                    if struct_inner_flag[0] == 0 :
-                       print "Structure inner loop finished "
+                       print "Structure inner loop finished ",deformation_change_max[0],deformation_change_max[0]/DeformUnit,StructTolerance,\
+                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],
 ##########################################################################################
 # End of Structure Inner Loop Iteration
 ##########################################################################################    
@@ -717,13 +739,23 @@ for nstep in range(0,numSteps):
                strainYFieldsA = strainYFields .asNumPyArray() 
                strainZFields = structureFields.strainZ[cellSitesLocal[n]]
                strainZFieldsA = strainZFields.asNumPyArray()
-        
+
+               eigenvalue1_positive=array([0.0])
+               eigenvalue2_positive=array([0.0])
+               eigenvalue3_positive=array([0.0])
+               eigenvalueFields = structureFields.eigenvalue[cellSitesLocal[n]]
+               eigenvalueFieldsA = eigenvalueFields.asNumPyArray()  
+               eigenvector1Fields = structureFields.eigenvector1[cellSitesLocal[n]]
+               eigenvector1FieldsA = eigenvector1Fields.asNumPyArray()  
+               eigenvector2Fields = structureFields.eigenvector2[cellSitesLocal[n]]
+               eigenvector2FieldsA = eigenvector2Fields.asNumPyArray()  
+               eigenvector3Fields = structureFields.eigenvector3[cellSitesLocal[n]]
+               eigenvector3FieldsA = eigenvector3Fields.asNumPyArray()  
+  
                sourceField = fractureFields.source[cellSitesLocal[n]]
                sourceFieldA = sourceField.asNumPyArray()
                sourceCoefField = fractureFields.sourcecoef[cellSitesLocal[n]]
                sourceCoefFieldA = sourceCoefField.asNumPyArray()
-               PhaseField = fractureFields.phasefieldvalue[cellSitesLocal[n]]
-               PhaseFieldA = PhaseField.asNumPyArray()
            
                deformation_change_max[0]=0
                deformation_change_maxi=0
@@ -738,7 +770,11 @@ for nstep in range(0,numSteps):
                        deformation_change_maxi=i                 
                    if abs(deformFieldsA[i,2]-deformation_z_outer[i])>deformation_change_max[0]:
                        deformation_change_max[0]=abs(deformFieldsA[i,2]-deformation_z_outer[i]) 
-                       deformation_change_maxi=i            
+                       deformation_change_maxi=i 
+                   
+                   decomposeStrainTensor(strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i],eigenvalueFieldsA[i],eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i],\
+                   eigenvalue1_positive,eigenvalue2_positive,eigenvalue3_positive,i,pfperfectFieldsA[i],rank_id)
+           
                    if strain_trace[i] >= 0 and SymFlag==2:
                        if V_flag[i] == 1 :
                            #if strain_trace[i] < 1e-1 :
@@ -794,20 +830,21 @@ for nstep in range(0,numSteps):
                    struct_outer_flag[0]=1
                    if rank_id==0:
                        print "Skipping fracture model from compress-found",deformation_change_max[0]/DeformUnit,deformation_change_max[0]
-               elif compress_found_flag[0]==0 and struct_outer_tol_flag[0] == 0 and struct_override_count<100:
+               elif compress_found_flag[0]==0 and struct_outer_tol_flag[0] == 0 and struct_override_count<StructIterUpLimit:
                    struct_outer_flag[0]=1
                    struct_override_count=struct_override_count+1
                    if rank_id==0:
                        print "Skipping fracture model from tolerance",deformation_change_max[0]/DeformUnit,deformation_change_max[0],struct_override_count
-               elif compress_found_flag[0]==0 and struct_outer_tol_flag[0] == 0 and struct_override_count>=100:
+               elif compress_found_flag[0]==0 and struct_outer_tol_flag[0] == 0 and struct_override_count>=StructIterUpLimit:
                    if rank_id==0:
                        print "Getting out of structure model But violating tolerance",deformation_change_max[0]/DeformUnit,deformation_change_max[0],struct_override_count
                elif compress_found_flag[0]==1 and struct_outer_tol_flag[0] == 1:
                    if rank_id==0:
-                       print "Overriding compress-found ",deformation_change_max[0]/DeformUnit,deformation_change_max[0]
+                       print "Getting out of structure model But violating compress-found ",deformation_change_max[0]/DeformUnit,deformation_change_max[0]
                else:
                    if rank_id==0:
-                       print "Getting out of structure model ",deformation_change_max[0]/DeformUnit,deformation_change_max[0]                 
+                       print "Getting out of structure model ",deformation_change_max[0]/DeformUnit,deformation_change_max[0],\
+                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],PhaseFieldA[deformation_change_maxi]
 ##########################################################################################
 # End of Structure Outer Loop Iteration
 ##########################################################################################                
@@ -844,27 +881,9 @@ for nstep in range(0,numSteps):
        Max_Dev_Strain = array([0.0])
        Max_Dev_Strain_X = array([0.0])
        Max_Dev_Strain_Y = array([0.0])
-       
-       pfvFields = structureFields.pfv[cellSitesLocal[n]]
-       pfvFieldsA = pfvFields.asNumPyArray()
-       eigenvalueFields = structureFields.eigenvalue[cellSitesLocal[n]]
-       eigenvalueFieldsA = eigenvalueFields.asNumPyArray()  
-       eigenvector1Fields = structureFields.eigenvector1[cellSitesLocal[n]]
-       eigenvector1FieldsA = eigenvector1Fields.asNumPyArray()  
-       eigenvector2Fields = structureFields.eigenvector2[cellSitesLocal[n]]
-       eigenvector2FieldsA = eigenvector2Fields.asNumPyArray()  
-       eigenvector3Fields = structureFields.eigenvector3[cellSitesLocal[n]]
-       eigenvector3FieldsA = eigenvector3Fields.asNumPyArray()  
         
-       
        for i in range(0,Count):
-           
-           eigenvalue1_positive=array([0.0])
-           eigenvalue2_positive=array([0.0])
-           eigenvalue3_positive=array([0.0])
-           
-           decomposeStrainTensor(strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i],eigenvalueFieldsA[i],eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i],eigenvalue1_positive,eigenvalue2_positive,eigenvalue3_positive,pfperfectFieldsA[i],rank_id)
-           
+
            if strain_trace[i] > 0:
                strain_trace_positive=strain_trace[i]
                strain_trace_negative=0
@@ -1083,7 +1102,7 @@ for nstep in range(0,numSteps):
        MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[PF_change_max, MPI.DOUBLE], op=MPI.MAX)
        
        if rank_id==0:
-           print "Phase Field Minimum Value: ",PF_min[0], "Maximum Phase Field Change: ",PF_change_max[0],PhaseFieldA[PF_change_maxi],PhaseFieldA[i]
+           print "Phase Field Minimum Value: ",PF_min[0], "Maximum Phase Field Change: ",PF_change_max[0],PhaseFieldA[PF_change_maxi]
        if mid_iter>MidIterUpLimit:
            mid_loop_flag[0] = 0
     
