@@ -154,15 +154,15 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pf
                 print "P1,P2,P3: ",P1,P2,P3
                 sys.exit()   
     if eig1<0:
-        evalue[0]=0
+        evalue[0]=eig1
     else:
         evalue[0]=eig1
     if eig2<0:
-        evalue[1]=0
+        evalue[1]=eig2
     else:
         evalue[1]=eig2
     if eig3<0:
-        evalue[2]=0
+        evalue[2]=eig3
     else:
         evalue[2]=eig3
     if pfp_flag==-1:

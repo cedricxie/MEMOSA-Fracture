@@ -16,4 +16,4 @@ export PATH=/home/xie45/build-carter/bin:$PATH
 export MEMOSA_CONFNAME=carter
 
 pwd
-mpirun -np 1 python ./tabletCompression.py cylinder-2D-coarse.cas --type tri> tabletCompression-2D.out
+mpirun -np 1 python ./tabletCompression.py cylinder-2D-coarse.cas > tabletCompression-2D.out
