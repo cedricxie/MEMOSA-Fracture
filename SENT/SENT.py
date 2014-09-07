@@ -23,8 +23,7 @@ from FluentCase import FluentCase
 import tecplotEntireStructureDomainPara
 import tecplotEntireFractureDomainPara
 
-def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,evalue1_positive,evalue2_positive,evalue3_positive,\
-i,pfp_flag,rank):
+def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pfp_flag,rank):
     zeroThreshold1=1e-14
     zeroThreshold2=1e-3
     A=array([strX,strY,strZ])
@@ -156,22 +155,16 @@ i,pfp_flag,rank):
                 sys.exit()   
     if eig1<0:
         evalue[0]=0
-        evalue1_positive[0] = 0
     else:
         evalue[0]=eig1
-        evalue1_positive[0] = eig1
     if eig2<0:
         evalue[1]=0
-        evalue2_positive[0] = 0
     else:
         evalue[1]=eig2
-        evalue2_positive[0] = eig2
     if eig3<0:
         evalue[2]=0
-        evalue3_positive[0] = 0
     else:
         evalue[2]=eig3
-        evalue3_positive[0] = eig3
     if pfp_flag==-1:
         evalue[0]=eig1
         evalue[1]=eig2
@@ -760,7 +753,7 @@ for nstep in range(0,numSteps):
                        deformation_change_maxi=i 
                    
                    decomposeStrainTensor(strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i],eigenvalueFieldsA[i],eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i],\
-                   eigenvalue1_positive,eigenvalue2_positive,eigenvalue3_positive,i,pfperfectFieldsA[i],rank_id)
+                   i,pfperfectFieldsA[i],rank_id)
            
                    if strain_trace[i] >= 0 and SymFlag==2:
                        if V_flag[i] == 1 :
@@ -888,6 +881,20 @@ for nstep in range(0,numSteps):
                #    #EnergyHistoryField[i]=ElasticEnergyField[i]
                #else :
                #    ElasticEnergyField[i]=EnergyHistoryField[i]
+           
+           if eigenvalueFieldsA[i][0]>0:
+               eigenvalue1_positive[0]=eigenvalueFieldsA[i][0]
+           else:
+               eigenvalue1_positive[0]=0
+           if eigenvalueFieldsA[i][1]>0:
+               eigenvalue2_positive[0]=eigenvalueFieldsA[i][1]
+           else:
+               eigenvalue2_positive[0]=0
+           if eigenvalueFieldsA[i][2]>0:
+               eigenvalue3_positive[0]=eigenvalueFieldsA[i][2]
+           else:
+               eigenvalue3_positive[0]=0
+
            if SymFlag==1:
                if strain_trace[i] >0:
                    ElasticEnergyField[i] = K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace

@@ -16,4 +16,4 @@ export PATH=/home/xie45/build-carter/bin:$PATH
 export MEMOSA_CONFNAME=carter
 
 pwd
-mpirun -np 64 python ./crackBranch.py crackBranch.cas --type hexa > crackBranch.out
+mpirun -np 16 python ./crackBranch.py CrackBranch-2D-coarse-whole.cas > crackBranch.out

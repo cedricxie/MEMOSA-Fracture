@@ -23,8 +23,7 @@ from FluentCase import FluentCase
 import tecplotEntireStructureDomainPara
 import tecplotEntireFractureDomainPara
 
-def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,evalue1_positive,evalue2_positive,evalue3_positive,\
-i,pfp_flag,rank):
+def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pfp_flag,rank):
     zeroThreshold1=1e-14
     zeroThreshold2=1e-3
     A=array([strX,strY,strZ])
@@ -156,22 +155,16 @@ i,pfp_flag,rank):
                 sys.exit()   
     if eig1<0:
         evalue[0]=0
-        evalue1_positive[0] = 0
     else:
         evalue[0]=eig1
-        evalue1_positive[0] = eig1
     if eig2<0:
         evalue[1]=0
-        evalue2_positive[0] = 0
     else:
         evalue[1]=eig2
-        evalue2_positive[0] = eig2
     if eig3<0:
         evalue[2]=0
-        evalue3_positive[0] = 0
     else:
         evalue[2]=eig3
-        evalue3_positive[0] = eig3
     if pfp_flag==-1:
         evalue[0]=eig1
         evalue[1]=eig2
@@ -197,20 +190,16 @@ i,pfp_flag,rank):
 ##########################################################################################   
 # parameter set up
  ##########################################################################################   
-#CrackBranch
-beamBot = 7
-beamLeft =  10
-beamRight = 4
+#CrackBranch-2D-coarse-whole
 beamTop = 6
-beamFront_Left = 8
-beamFront_Right = 2
-beamBack_Left = 3
-beamBack_Right = 9
-IDs = (2, 3, 4, 6, 7, 8, 9, 10)
-BoundaryPositionTop = 4e-2-1e-4 #Top
-BoundaryPositionRight = 1e-1-1e-4 #Right
-BoundaryPositionLeft = 45e-3/10.0
-BoundaryPositionBottom = 1e-4
+beamBot = 2
+beamLeft = 4
+beamRight = 5
+IDs = (2,4,5,6)
+BoundaryPositionTop = 4e-2-2e-4 #Top
+BoundaryPositionRight = 1e-1-2e-4 #Right
+BoundaryPositionLeft = 2e-4
+BoundaryPositionBottom = 2e-4
 
 # Set Parameters
 numSteps = 30			   # Number of Steps
@@ -238,7 +227,7 @@ StressStep = 1e6
 
 OInterval_s = 1                 #Output interval for equilibrium status
 OInterval_l = 50
-MidOInterval_s = 1              #Output interval for intermediate status
+MidOInterval_s = 20              #Output interval for intermediate status
 MidOInterval_l = 50
 OPFLimit = 0.02
 OUpLimit=0                     #Upper Limit for large displacement step
@@ -246,10 +235,10 @@ DispReFactor=1.0               #Smaller displacement step is: 1/DispReFactor of 
 MidIterUpLimit = 200
 
 StiffnessResidual = 2e-4       #Used to have a lower bound of the material constant for damaged cell
-StructTolerance = 1e-5         #Tolerance for structure model inner iteration
-StructOuterTolerance = 1e-5
+StructTolerance = 1e-4         #Tolerance for structure model inner iteration
+StructOuterTolerance = 1e-4
 StructIterFlag = 1             #1--Do structure model iteration; 0--No structure model iteration
-StructIterUpLimit = 80
+StructIterUpLimit = 40
 
 PFTolerance = 1e-4             #Tolerance for fracture model iteration
 PFOuterTolerance = 1e-4
@@ -348,11 +337,6 @@ for id in [beamRight]:
         bc['specifiedXDeformation'] = 0
         bc['specifiedYDeformation'] = 0
         bc['specifiedZDeformation'] = 0
-        #bc.bcType = 'Symmetry'
-        #bc.bcType = 'SpecifiedTraction'
-        #bc['specifiedXXTraction'] = 0
-        #bc['specifiedYXTraction'] = 0
-        #bc['specifiedZXTraction'] = 0
 for id in [beamTop]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
@@ -363,7 +347,6 @@ for id in [beamTop]:
 for id in [beamBot]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        #bc.bcType = 'Symmetry'
         bc.bcType = 'SpecifiedTraction'
         bc['specifiedXYTraction'] = 0
         bc['specifiedYYTraction'] = 0
@@ -379,30 +362,6 @@ for id in [beamLeft]:
         bc['specifiedXXTraction'] = 0
         bc['specifiedYXTraction'] = 0
         bc['specifiedZXTraction'] = 0
-for id in [beamFront_Left]:
-    if id in StructurebcMap:
-        bc = StructurebcMap[id]
-        bc.bcType = 'Symmetry'
-        #bc.bcType = 'SpecifiedTraction'
-        #bc['specifiedXZTraction'] = 0
-        #bc['specifiedYZTraction'] = 0
-        #bc['specifiedZZTraction'] = 0
-for id in [beamFront_Right]:
-    if id in StructurebcMap:
-        bc = StructurebcMap[id]
-        bc.bcType = 'Symmetry'      
-for id in [beamBack_Left]:
-    if id in StructurebcMap:
-        bc = StructurebcMap[id]
-        bc.bcType = 'Symmetry'
-        #bc.bcType = 'SpecifiedTraction'
-        #bc['specifiedXZTraction'] = 0
-        #bc['specifiedYZTraction'] = 0
-        #bc['specifiedZZTraction'] = 0
-for id in [beamBack_Right]:
-    if id in StructurebcMap:
-        bc = StructurebcMap[id]
-        bc.bcType = 'Symmetry'
 
 
 vcMap = smodel.getVCMap()
@@ -568,8 +527,8 @@ for n in range(0,nmesh):
         PFHistoryField.append(1.0)
         if (coordA[i,0]-0.0)>0.0 and\
         (coordA[i,0]-0.1/2.0)<0.0 and\
-        (coordA[i,1]-0.04/2.0+1e-4)>0.0 and\
-        (coordA[i,1]-0.04/2.0-1e-4)<0.0:
+        (coordA[i,1]-0.04/2.0+2.0*cLoC)>0.0 and\
+        (coordA[i,1]-0.04/2.0-2.0*cLoC)<0.0:
             PFHistoryField[i]=0   
             pfperfectFieldsA[i]=-1
             pfvFieldsA[i]=0
@@ -769,7 +728,7 @@ for nstep in range(0,numSteps):
                        deformation_change_maxi=i 
                    
                    decomposeStrainTensor(strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i],eigenvalueFieldsA[i],eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i],\
-                   eigenvalue1_positive,eigenvalue2_positive,eigenvalue3_positive,i,pfperfectFieldsA[i],rank_id)
+                   i,pfperfectFieldsA[i],rank_id)
            
                    if strain_trace[i] >= 0 and SymFlag==2:
                        if V_flag[i] == 1 :
@@ -897,6 +856,20 @@ for nstep in range(0,numSteps):
                #    #EnergyHistoryField[i]=ElasticEnergyField[i]
                #else :
                #    ElasticEnergyField[i]=EnergyHistoryField[i]
+           
+           if eigenvalueFieldsA[i][0]>0:
+               eigenvalue1_positive[0]=eigenvalueFieldsA[i][0]
+           else:
+               eigenvalue1_positive[0]=0
+           if eigenvalueFieldsA[i][1]>0:
+               eigenvalue2_positive[0]=eigenvalueFieldsA[i][1]
+           else:
+               eigenvalue2_positive[0]=0
+           if eigenvalueFieldsA[i][2]>0:
+               eigenvalue3_positive[0]=eigenvalueFieldsA[i][2]
+           else:
+               eigenvalue3_positive[0]=0
+
            if SymFlag==1:
                if strain_trace[i] >0:
                    ElasticEnergyField[i] = K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace
@@ -908,12 +881,12 @@ for nstep in range(0,numSteps):
                    ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
                else: 
                    ElasticEnergyField[i] = G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
-               #if i==100:
-               #    print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
-               #    print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
-               #    print tractZFieldsA[i][2]
-               #    print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
-               #    #print tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i],V_flag[i]
+               #if coordA[i,0]>0.05-2.0*cLoC and coordA[i,0]<0.05+2.0*cLoC and coordA[i,1]>0.02-2.0*cLoC and coordA[i,1]<0.02+2.0*cLoC:
+               #    print "Cord. and Energy:",coordA[i,0],coordA[i,1],ElasticEnergyField[i],strain_trace[i],eigenvalue1_positive[0],eigenvalue2_positive[0],eigenvalue3_positive[0]
+               #    print "Strain tensor:",strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
+               #    print "Eigenvalue:",eigenvalueFieldsA[i]
+               #    print "Eigenvector:",eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
+               #    print "Traction and phase field:",tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i]
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + ((PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace)+K_local[i]/2.0*strain_trace_negative**2)*volumeA[i]
            
            Total_Compression_Elastic_Energy[0] = Total_Compression_Elastic_Energy[0] + K_local[i]/2.0*strain_trace_negative**2
