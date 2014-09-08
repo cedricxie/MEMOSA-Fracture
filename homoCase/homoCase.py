@@ -154,15 +154,15 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pf
                 print "P1,P2,P3: ",P1,P2,P3
                 sys.exit()   
     if eig1<0:
-        evalue[0]=0
+        evalue[0]=eig1
     else:
         evalue[0]=eig1
     if eig2<0:
-        evalue[1]=0
+        evalue[1]=eig2
     else:
         evalue[1]=eig2
     if eig3<0:
-        evalue[2]=0
+        evalue[2]=eig3
     else:
         evalue[2]=eig3
     if pfp_flag==-1:
@@ -914,9 +914,9 @@ for nstep in range(0,numSteps):
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + (PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace[i]**2+G_local[i]*strain_dev2_trace)*volumeA[i]
            else:
                if strain_trace[i] >0:
-                   ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
+                   ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*(eigenvalueFieldsA[i][0]**2.0+eigenvalueFieldsA[i][1]**2.0+eigenvalueFieldsA[i][2]**2.0)
                else: 
-                   ElasticEnergyField[i] = G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
+                   ElasticEnergyField[i] = G_local[i]*(eigenvalueFieldsA[i][0]**2.0+eigenvalueFieldsA[i][1]**2.0+eigenvalueFieldsA[i][2]**2.0)
                if i==100:
                    print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
                    print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
