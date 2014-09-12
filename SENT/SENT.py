@@ -169,6 +169,10 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pf
         evalue[0]=eig1
         evalue[1]=eig2
         evalue[2]=eig3
+    if pfp_flag==-2:
+        evalue[0]=0
+        evalue[1]=0
+        evalue[2]=0
     evector1[0]=P1[0]
     evector1[1]=P1[1]
     evector1[2]=P1[2]
@@ -207,7 +211,7 @@ BoundaryPositionBottom = 1.0e-3/20.0
 
 
 # Set Parameters
-numSteps = 5			   # Number of Steps
+numSteps = 10000			   # Number of Steps
 timeStep = 3600                # Size of timestep (seconds)
 numtimeSteps = 1               # Number of timesteps in global combined solution
 numStructIterations = 20       # Number of iterations for structure model, automatically set to 1 when StructIterFlag == 0
@@ -227,27 +231,27 @@ crackPF = 1e-3			       # Phase Field Value at Crack
 NumofFiber = 0
 
 DeformUnit = (cFED*BoundaryPositionTop/Lamda)**0.5  #Normalized Displacement Unit
-#DispStep = 0.02*DeformUnit	   # Displacement Step
-DispStep = 1e-8
+DispStep = 0.02*DeformUnit	   # Displacement Step
+#DispStep = 1e-8
 StressStep = 1e6
 
 OInterval_s = 1                 #Output interval for equilibrium status
 OInterval_l = 50
-MidOInterval_s = 1              #Output interval for intermediate status
+MidOInterval_s = 20              #Output interval for intermediate status
 MidOInterval_l = 50
 OPFLimit = 0.02
-OUpLimit=500                   #Upper Limit for large displacement step
+OUpLimit=20                   #Upper Limit for large displacement step
 DispReFactor=1.0               #Smaller displacement step is: 1/DispReFactor of larger displacement step
-MidIterUpLimit = 200
+MidIterUpLimit = 100
 
-StiffnessResidual = 1e-5       #Used to have a lower bound of the material constant for damaged cell
-StructTolerance = 1e-5         #Tolerance for structure model inner iteration
-StructOuterTolerance = 1e-5
-StructIterFlag = 0             #1--Do structure model iteration; 0--No structure model iteration
-StructIterUpLimit = 80
+StiffnessResidual = 1e-6       #Used to have a lower bound of the material constant for damaged cell
+StructTolerance = 1e-3         #Tolerance for structure model inner iteration
+StructOuterTolerance = 1e-3
+StructIterFlag = 1             #1--Do structure model iteration; 0--No structure model iteration
+StructIterUpLimit = 40
 
-PFTolerance = 1e-4             #Tolerance for fracture model iteration
-PFOuterTolerance = 1e-4
+PFTolerance = 1e-3             #Tolerance for fracture model iteration
+PFOuterTolerance = 1e-3
 PFIterFlag = 1                 #1--Do convergence test iteration; 0--No convergence test iteration
 
 PerfectRad = 0e-3
@@ -549,6 +553,16 @@ for n in range(0,nmesh):
     PhaseField = fractureFields.phasefieldvalue[cellSitesLocal[n]]
     PhaseFieldA = PhaseField.asNumPyArray()
     for i in range(0,Count):
+
+        E_local.append(E)
+        nu_local.append(nu)
+        K_local.append(\
+        #9.0*K*G/(3.0*K+4.0*G)
+        K
+        )
+        Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
+        G_local.append(E_local[i]/(2.*(1+nu_local[i])))
+
 ################Pre-defined crack#####################
         PFHistoryField.append(1.0)
         if (coordA[i,0]-0.0)>0.0 and\
@@ -557,8 +571,19 @@ for n in range(0,nmesh):
         (coordA[i,1]-0.001/2.0-0.001/100.0/0.5)<0.0:
             PFHistoryField[i]=0.0   
             pfperfectFieldsA[i]=-1
-            pfvFieldsA[i]=0.0
-            PhaseFieldA[i]=0.0
+            pfvFieldsA[i]=0
+            PhaseFieldA[i]=0
+        if (coordA[i,0]-0.0)>0.0 and\
+        (coordA[i,0]-0.0)<0.0 and\
+        (coordA[i,1]-0.001/2.0+0.001/100.0/0.5)>0.0 and\
+        (coordA[i,1]-0.001/2.0-0.001/100.0/0.5)<0.0:
+            PFHistoryField[i]=0   
+            pfperfectFieldsA[i]=-2
+            pfvFieldsA[i]=0
+            PhaseFieldA[i]=0
+            etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+            eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+            
 ################Forcing perfect region################  
         if (coordA[i,1]-0.0)**2.0<PerfectRad**2.0 or\
         (coordA[i,1]-4e-2)**2.0<PerfectRad**2.0:
@@ -581,15 +606,6 @@ for n in range(0,nmesh):
         strain_trace.append(0)
         ElasticEnergyField.append(0)
         EnergyHistoryField.append(0)
-
-        E_local.append(E)
-        nu_local.append(nu)
-        K_local.append(\
-        9.0*K*G/(3.0*K+4.0*G)
-        #K
-        )
-        Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-1.0*nu_local[i]) )
-        G_local.append(E_local[i]/(2.*(1+nu_local[i])))
 
         for fiber_count in range(0,NumofFiber) :
             if((coordA[i,0]-fiber_x[fiber_count])**2+\
@@ -906,12 +922,12 @@ for nstep in range(0,numSteps):
                    ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
                else: 
                    ElasticEnergyField[i] = G_local[i]*(eigenvalue1_positive[0]**2.0+eigenvalue2_positive[0]**2.0+eigenvalue3_positive[0]**2.0)
-               if i==100:
-                   print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
-                   print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
-                   print tractZFieldsA[i][2]
-                   print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
-               #    #print tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i],V_flag[i]
+               #if coordA[i,0]>0.05-2.0*cLoC and coordA[i,0]<0.05+2.0*cLoC and coordA[i,1]>0.02-2.0*cLoC and coordA[i,1]<0.02+2.0*cLoC:
+               #    print "Cord. and Energy:",coordA[i,0],coordA[i,1],ElasticEnergyField[i],strain_trace[i],eigenvalue1_positive[0],eigenvalue2_positive[0],eigenvalue3_positive[0]
+               #    print "Strain tensor:",strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
+               #    print "Eigenvalue:",eigenvalueFieldsA[i]
+               #    print "Eigenvector:",eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
+               #    print "Traction and phase field:",tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i]
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + ((PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace)+K_local[i]/2.0*strain_trace_negative**2)*volumeA[i]
            
            Total_Compression_Elastic_Energy[0] = Total_Compression_Elastic_Energy[0] + K_local[i]/2.0*strain_trace_negative**2
@@ -1110,8 +1126,12 @@ for nstep in range(0,numSteps):
            #    #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            #    #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            else :
-               etaFieldsA[i]=G_local[i]
-               eta1FieldsA[i]=Lamda_local[i]
+               if pfperfectFieldsA[i]==-2:
+                   etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+                   eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+               else:
+                   etaFieldsA[i]=G_local[i]
+                   eta1FieldsA[i]=Lamda_local[i]
                #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                #eta1FieldsA[i]=Lamda_local[i]+G_local[i]*2.0/3.0*(1-(PhaseFieldA[i]**2.0+StiffnessResidual))

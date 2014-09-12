@@ -169,6 +169,10 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pf
         evalue[0]=eig1
         evalue[1]=eig2
         evalue[2]=eig3
+    if pfp_flag==-2:
+        evalue[0]=0
+        evalue[1]=0
+        evalue[2]=0
     evector1[0]=P1[0]
     evector1[1]=P1[1]
     evector1[2]=P1[2]
@@ -202,7 +206,7 @@ BoundaryPositionLeft = 2e-4
 BoundaryPositionBottom = 2e-4
 
 # Set Parameters
-numSteps = 30			   # Number of Steps
+numSteps = 2   			   # Number of Steps
 timeStep = 3600                # Size of timestep (seconds)
 numtimeSteps = 1               # Number of timesteps in global combined solution
 numStructIterations = 20       # Number of iterations for structure model, automatically set to 1 when StructIterFlag == 0
@@ -223,25 +227,25 @@ NumofFiber = 0
 
 DeformUnit = (cFED*BoundaryPositionTop/Lamda)**0.5  #Normalized Displacement Unit
 DispStep = 0.02*DeformUnit	   # Displacement Step
-StressStep = 1e6
+StressStep = 1.0e6
 
 OInterval_s = 1                 #Output interval for equilibrium status
 OInterval_l = 50
-MidOInterval_s = 20              #Output interval for intermediate status
+MidOInterval_s = 1              #Output interval for intermediate status
 MidOInterval_l = 50
 OPFLimit = 0.02
 OUpLimit=0                     #Upper Limit for large displacement step
 DispReFactor=1.0               #Smaller displacement step is: 1/DispReFactor of larger displacement step
-MidIterUpLimit = 200
+MidIterUpLimit = 100
 
-StiffnessResidual = 2e-4       #Used to have a lower bound of the material constant for damaged cell
-StructTolerance = 1e-4         #Tolerance for structure model inner iteration
-StructOuterTolerance = 1e-4
+StiffnessResidual = 1e-6       #Used to have a lower bound of the material constant for damaged cell
+StructTolerance = 1e-5         #Tolerance for structure model inner iteration
+StructOuterTolerance = 1e-5
 StructIterFlag = 1             #1--Do structure model iteration; 0--No structure model iteration
 StructIterUpLimit = 40
 
-PFTolerance = 1e-4             #Tolerance for fracture model iteration
-PFOuterTolerance = 1e-4
+PFTolerance = 1e-5             #Tolerance for fracture model iteration
+PFOuterTolerance = 1e-5
 PFIterFlag = 1                 #1--Do convergence test iteration; 0--No convergence test iteration
 
 PerfectRad = 0e-3
@@ -333,6 +337,7 @@ StructurebcMap = smodel.getBCMap()
 for id in [beamRight]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
+        #bc.bcType = 'Symmetry'
         bc.bcType = 'SpecifiedDeformation'
         bc['specifiedXDeformation'] = 0
         bc['specifiedYDeformation'] = 0
@@ -340,6 +345,10 @@ for id in [beamRight]:
 for id in [beamTop]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
+        #bc.bcType = 'SpecifiedDeformation'
+        #bc['specifiedXDeformation'] = 0
+        #bc['specifiedYDeformation'] = 0
+        #bc['specifiedZDeformation'] = 0
         bc.bcType = 'SpecifiedTraction'
         bc['specifiedXYTraction'] = 0
         bc['specifiedYYTraction'] = 0
@@ -347,6 +356,7 @@ for id in [beamTop]:
 for id in [beamBot]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
+        #bc.bcType = 'Symmetry'
         bc.bcType = 'SpecifiedTraction'
         bc['specifiedXYTraction'] = 0
         bc['specifiedYYTraction'] = 0
@@ -358,6 +368,7 @@ for id in [beamBot]:
 for id in [beamLeft]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
+        #bc.bcType = 'Symmetry'
         bc.bcType = 'SpecifiedTraction'
         bc['specifiedXXTraction'] = 0
         bc['specifiedYXTraction'] = 0
@@ -523,15 +534,37 @@ for n in range(0,nmesh):
     PhaseField = fractureFields.phasefieldvalue[cellSitesLocal[n]]
     PhaseFieldA = PhaseField.asNumPyArray()
     for i in range(0,Count):
+
+        E_local.append(E)
+        nu_local.append(nu)
+        K_local.append(\
+        #9.0*K*G/(3.0*K+4.0*G)
+        K
+        )
+        Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
+        G_local.append(E_local[i]/(2.*(1+nu_local[i])))
+
 ################Pre-defined crack#####################
         PFHistoryField.append(1.0)
         if (coordA[i,0]-0.0)>0.0 and\
-        (coordA[i,0]-0.1/2.0)<0.0 and\
-        (coordA[i,1]-0.04/2.0+2.0*cLoC)>0.0 and\
-        (coordA[i,1]-0.04/2.0-2.0*cLoC)<0.0:
+        (coordA[i,0]-0.0)<0.0 and\
+        (coordA[i,1]-0.04/2.0+1.0*cLoC)>0.0 and\
+        (coordA[i,1]-0.04/2.0-1.0*cLoC)<0.0:
             PFHistoryField[i]=0   
             pfperfectFieldsA[i]=-1
             pfvFieldsA[i]=0
+            PhaseFieldA[i]=0
+        if (coordA[i,0]-0.0)>0.0 and\
+        (coordA[i,0]-0.1/2.0+0.0*cLoC)<0.0 and\
+        (coordA[i,1]-0.04/2.0+1.0*cLoC)>0.0 and\
+        (coordA[i,1]-0.04/2.0-1.0*cLoC)<0.0:
+            PFHistoryField[i]=0   
+            pfperfectFieldsA[i]=-2
+            pfvFieldsA[i]=0
+            PhaseFieldA[i]=0
+            etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+            eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+            
 ################Forcing perfect region################  
         if (coordA[i,1]-0.0)**2.0<PerfectRad**2.0 or\
         (coordA[i,1]-4e-2)**2.0<PerfectRad**2.0:
@@ -554,15 +587,6 @@ for n in range(0,nmesh):
         strain_trace.append(0)
         ElasticEnergyField.append(0)
         EnergyHistoryField.append(0)
-
-        E_local.append(E)
-        nu_local.append(nu)
-        K_local.append(\
-        #9.0*K*G/(3.0*K+4.0*G)
-        K
-        )
-        Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
-        G_local.append(E_local[i]/(2.*(1+nu_local[i])))
 
         for fiber_count in range(0,NumofFiber) :
             if((coordA[i,0]-fiber_x[fiber_count])**2+\
@@ -592,6 +616,7 @@ for nstep in range(0,numSteps):
        if id in StructurebcMap:
            bc = StructurebcMap[id]
            bc['specifiedYYTraction'] = StressStep
+           #bc['specifiedYDeformation'] = Displacement
    for id in [beamBot]:
        if id in StructurebcMap:
            bc = StructurebcMap[id]
@@ -1085,8 +1110,12 @@ for nstep in range(0,numSteps):
            #    #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            #    #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            else :
-               etaFieldsA[i]=G_local[i]
-               eta1FieldsA[i]=Lamda_local[i]
+               if pfperfectFieldsA[i]==-2:
+                   etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+                   eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+               else:
+                   etaFieldsA[i]=G_local[i]
+                   eta1FieldsA[i]=Lamda_local[i]
                #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                #eta1FieldsA[i]=Lamda_local[i]+G_local[i]*2.0/3.0*(1-(PhaseFieldA[i]**2.0+StiffnessResidual))

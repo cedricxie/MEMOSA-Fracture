@@ -339,15 +339,36 @@ public:
     
     //printf("source term: %lf, %lf, %lf\n",source[0],source[1],source[2]);
     
-    if (divU>0 && (pfperfectCell[c0]!=-1&&pfperfectCell[c1]!=-1)){
+    if (divU>0 && pfperfectCell[c0]!=-2 && pfperfectCell[c1]!=-2){
         source[0] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[0];
         source[1] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[1];
         source[2] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[2];
     }
-    if (pfperfectCell[c0]==-1||pfperfectCell[c1]==-1){
+    if (divU>0 && pfperfectCell[c0]!=-2 && pfperfectCell[c1]==-2){
+        source[0] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0)*faceLambdaOld*divU*Af[0];
+        source[1] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0)*faceLambdaOld*divU*Af[1];
+        source[2] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0)*faceLambdaOld*divU*Af[2];
+    }
+    if (divU>0 && pfperfectCell[c0]==-2 && pfperfectCell[c1]!=-2){
+        source[0] -= ((1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[0];
+        source[1] -= ((1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[1];
+        source[2] -= ((1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[2];
+    }
+    
+    if (divU<0 && pfperfectCell[c0]==-1 && pfperfectCell[c1]==-1){
         source[0] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[0];
         source[1] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[1];
         source[2] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[2];
+    }
+    if (divU<0 && pfperfectCell[c0]==-1 && pfperfectCell[c1]!=-1){
+        source[0] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0)*faceLambdaOld*divU*Af[0];
+        source[1] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0)*faceLambdaOld*divU*Af[1];
+        source[2] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0)*faceLambdaOld*divU*Af[2];
+    }
+    if (divU<0 && pfperfectCell[c0]!=-1 && pfperfectCell[c1]==-1){
+        source[0] -= ((1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[0];
+        source[1] -= ((1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[1];
+        source[2] -= ((1.0-pfvCell[c1]*pfvCell[c1])*wt1)*faceLambdaOld*divU*Af[2];
     }
 
 	if(_thermo)
