@@ -190,16 +190,38 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pf
 ##########################################################################################   
 # parameter set up
  ########################################################################################## 
-#cylinder-2D-coarse
-beamBot = 5
-beamLeft =  4
-beamRight = 3
-beamTop = 6
-IDs = (3, 4, 5, 6)
-BoundaryPositionTop = 1e-2-1e-5 #Top
-BoundaryPositionRight = 1e-5 #Right
-BoundaryPositionLeft = -1e-5
-BoundaryPositionBottom = 1e-5
+#tablet-100
+beamBot_1 = 17
+beamBot_2 = 13
+beamBot_3 = 12
+beamBot_4 = 11
+beamBot_5 = 10
+beamBot_6 = 9
+beamBot_7 = 8
+beamBot_8 = 7
+beamBot_9 = 6
+beamBot_10 = 5
+beamTop_1 = 16
+beamTop_2 = 15
+beamTop_3 = 24
+beamTop_4 = 14
+beamTop_5 = 23
+beamTop_6 = 22
+beamTop_7 = 21
+beamTop_8 = 20
+beamTop_9 = 19
+beamTop_10 = 18
+beamLeft = 2
+beamRight = 4
+IDs = (2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)
+BoundaryPositionTop = 4.8989e-3-4e-5 #Top
+BoundaryPositionRight = 1e-3 #Right
+BoundaryPositionLeft = -1e-3
+BoundaryPositionBottom = -4.8989e-3+4e-5
+radius = 5e-3
+beamTops = (16, 15, 24, 14, 23, 22, 21, 20, 19, 18)
+beamBots = (17, 13, 12, 11, 10, 9, 8, 7, 6, 5)
+#fiber_file_name = "one-fiber-circle"+".txt"
 
 # Set Parameters
 numSteps = 10000			   # Number of Steps
@@ -240,7 +262,7 @@ StiffnessResidual = 1e-6       #Used to have a lower bound of the material const
 StructTolerance = 1e-3         #Tolerance for structure model inner iteration
 StructOuterTolerance = 1e-3
 StructIterFlag = 0             #1--Do structure model iteration; 0--No structure model iteration
-StructIterUpLimit = 40
+StructIterUpLimit = 20
 
 PFTolerance = 1e-3             #Tolerance for fracture model iteration
 PFOuterTolerance = 1e-3
@@ -332,22 +354,16 @@ for vc in vcMap.values():
     vc.setVar('fractureConductivity',Diff)
 
 StructurebcMap = smodel.getBCMap()
-for id in [beamRight]:
-    if id in StructurebcMap:
-        bc = StructurebcMap[id]
-        #bc.bcType = 'Symmetry'
-        bc.bcType = 'SpecifiedTraction'
-        bc['specifiedXXTraction'] = 0
-        bc['specifiedYXTraction'] = 0
-        bc['specifiedZXTraction'] = 0
-for id in [beamTop]:
+
+for id in beamTops:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
         bc.bcType = 'SpecifiedDeformation'
         bc['specifiedXDeformation'] = 0
         bc['specifiedYDeformation'] = 0
         bc['specifiedZDeformation'] = 0
-for id in [beamBot]:
+        
+for id in beamBots:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
         #bc.bcType = 'SpecifiedTraction'
@@ -359,6 +375,16 @@ for id in [beamBot]:
         bc['specifiedXDeformation'] = 0
         bc['specifiedYDeformation'] = 0
         bc['specifiedZDeformation'] = 0
+
+for id in [beamRight]:
+    if id in StructurebcMap:
+        bc = StructurebcMap[id]
+        #bc.bcType = 'Symmetry'
+        bc.bcType = 'SpecifiedTraction'
+        bc['specifiedXXTraction'] = 0
+        bc['specifiedYXTraction'] = 0
+        bc['specifiedZXTraction'] = 0
+
 for id in [beamLeft]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
@@ -594,23 +620,19 @@ for nstep in range(0,numSteps):
        ExternalStress=ExternalStress+ StressStep
    if rank_id==0:
        print "----------Starting step: ",nstep, "Displacement: ",Displacement
-
-   for id in [beamTop]:
+   
+   i = 0 
+   for id in beamTops:
+       i = i + 1
        if id in StructurebcMap:
            bc = StructurebcMap[id]
            bc['specifiedYDeformation'] =-Displacement
-   #for id in [beamBot]:
-   #    if id in StructurebcMap:
-   #        bc = StructurebcMap[id]
-   #        bc['specifiedYYTraction'] =ExternalStress
-   #for id in [beamRight]:
-   #    if id in StructurebcMap:
-   #        bc = StructurebcMap[id]
-   #        bc['specifiedXXTraction'] =ExternalStress*0.0
-   #for id in [beamLeft]:
-   #    if id in StructurebcMap:
-   #        bc = StructurebcMap[id]
-   #        bc['specifiedYYTraction'] =ExternalStress
+   i = 0 
+   for id in beamBots:
+       i = i + 1
+       if id in StructurebcMap:
+           bc = StructurebcMap[id]
+           bc['specifiedYDeformation'] = Displacement
 ##########################################################################################
 # Start of Middle Loop Iteration
 ##########################################################################################           
