@@ -237,21 +237,21 @@ StressStep = 1e6
 
 OInterval_s = 1                 #Output interval for equilibrium status
 OInterval_l = 50
-MidOInterval_s = 20              #Output interval for intermediate status
+MidOInterval_s = 50              #Output interval for intermediate status
 MidOInterval_l = 50
 OPFLimit = 0.02
-OUpLimit=20                   #Upper Limit for large displacement step
+OUpLimit=50                   #Upper Limit for large displacement step
 DispReFactor=1.0               #Smaller displacement step is: 1/DispReFactor of larger displacement step
-MidIterUpLimit = 100
+MidIterUpLimit = 50
 
 StiffnessResidual = 1e-6       #Used to have a lower bound of the material constant for damaged cell
-StructTolerance = 1e-3         #Tolerance for structure model inner iteration
-StructOuterTolerance = 1e-3
+StructTolerance = 5e-4         #Tolerance for structure model inner iteration
+StructOuterTolerance = 5e-4
 StructIterFlag = 1             #1--Do structure model iteration; 0--No structure model iteration
 StructIterUpLimit = 40
 
-PFTolerance = 1e-3             #Tolerance for fracture model iteration
-PFOuterTolerance = 1e-3
+PFTolerance = 5e-4             #Tolerance for fracture model iteration
+PFOuterTolerance = 5e-4
 PFIterFlag = 1                 #1--Do convergence test iteration; 0--No convergence test iteration
 
 PerfectRad = 0e-3
@@ -567,16 +567,16 @@ for n in range(0,nmesh):
         PFHistoryField.append(1.0)
         if (coordA[i,0]-0.0)>0.0 and\
         (coordA[i,0]-0.001/2.0)<0.0 and\
-        (coordA[i,1]-0.001/2.0+0.001/100.0/0.5)>0.0 and\
-        (coordA[i,1]-0.001/2.0-0.001/100.0/0.5)<0.0:
+        (coordA[i,1]-0.001/2.0+cLoC)>0.0 and\
+        (coordA[i,1]-0.001/2.0-cLoC)<0.0:
             PFHistoryField[i]=0.0   
             pfperfectFieldsA[i]=-1
             pfvFieldsA[i]=0
             PhaseFieldA[i]=0
         if (coordA[i,0]-0.0)>0.0 and\
         (coordA[i,0]-0.0)<0.0 and\
-        (coordA[i,1]-0.001/2.0+0.001/100.0/0.5)>0.0 and\
-        (coordA[i,1]-0.001/2.0-0.001/100.0/0.5)<0.0:
+        (coordA[i,1]-0.001/2.0+cLoC)>0.0 and\
+        (coordA[i,1]-0.001/2.0-cLoC)<0.0:
             PFHistoryField[i]=0   
             pfperfectFieldsA[i]=-2
             pfvFieldsA[i]=0

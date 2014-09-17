@@ -238,7 +238,7 @@ OUpLimit=0                     #Upper Limit for large displacement step
 DispReFactor=1.0               #Smaller displacement step is: 1/DispReFactor of larger displacement step
 MidIterUpLimit = 100
 
-StiffnessResidual = 1e-6       #Used to have a lower bound of the material constant for damaged cell
+StiffnessResidual = 1e-20       #Used to have a lower bound of the material constant for damaged cell
 StructTolerance = 1e-5         #Tolerance for structure model inner iteration
 StructOuterTolerance = 1e-5
 StructIterFlag = 1             #1--Do structure model iteration; 0--No structure model iteration
@@ -551,7 +551,7 @@ for n in range(0,nmesh):
         (coordA[i,1]-0.04/2.0+1.0*cLoC)>0.0 and\
         (coordA[i,1]-0.04/2.0-1.0*cLoC)<0.0:
             PFHistoryField[i]=0   
-            pfperfectFieldsA[i]=-1
+            #pfperfectFieldsA[i]=-1
             pfvFieldsA[i]=0
             PhaseFieldA[i]=0
         if (coordA[i,0]-0.0)>0.0 and\
