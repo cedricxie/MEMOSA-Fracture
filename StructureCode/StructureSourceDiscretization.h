@@ -315,7 +315,7 @@ public:
         const T diffMetric = faceAreaMag[f]*faceAreaMag[f]/dot(faceArea[f],ds);
         const VectorT3 secondaryCoeff = faceMu*(faceArea[f]-ds*diffMetric);
         
-        const T divUc0 = (vGradCell[c0][0][0] +vGradCell[c0][1][1] +vGradCell[c0][2][2]);
+        /*const T divUc0 = (vGradCell[c0][0][0] +vGradCell[c0][1][1] +vGradCell[c0][2][2]);
         const T divUc1 = (vGradCell[c1][0][0] +vGradCell[c1][1][1] +vGradCell[c1][2][2]);
         
         faceEigenvalue11[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*(vGradCell[c0][0][0]-divUc0/3.0)*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*(vGradCell[c1][0][0]-divUc1/3.0)*wt1;
@@ -328,7 +328,22 @@ public:
         
         faceEigenvalue31[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*vGradCell[c0][2][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*vGradCell[c1][2][0]*wt1;
         faceEigenvalue32[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*vGradCell[c0][2][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*vGradCell[c1][2][1]*wt1;
-        faceEigenvalue33[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*(vGradCell[c0][2][2]-divUc0/3.0)*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*(vGradCell[c1][2][2]-divUc1/3.0)*wt1;
+        faceEigenvalue33[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*(vGradCell[c0][2][2]-divUc0/3.0)*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*(vGradCell[c1][2][2]-divUc1/3.0)*wt1;*/
+
+        const T divUc0 = (eigenvector1Cell[c0][0] +eigenvector2Cell[c0][1] +eigenvector3Cell[c0][2]);
+        const T divUc1 = (eigenvector1Cell[c1][0] +eigenvector2Cell[c1][1] +eigenvector3Cell[c1][2]);
+        
+        faceEigenvalue11[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*(eigenvector1Cell[c0][0]-divUc0/3.0)*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*(eigenvector1Cell[c1][0]-divUc1/3.0)*wt1;
+        faceEigenvalue12[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector1Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector1Cell[c1][1]*wt1;
+        faceEigenvalue13[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector1Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector1Cell[c1][2]*wt1;
+        
+        faceEigenvalue21[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector2Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector2Cell[c1][0]*wt1;
+        faceEigenvalue22[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*(eigenvector2Cell[c0][1]-divUc0/3.0)*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*(eigenvector2Cell[c1][1]-divUc1/3.0)*wt1;
+        faceEigenvalue23[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector2Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector2Cell[c1][2]*wt1;
+        
+        faceEigenvalue31[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector3Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector3Cell[c1][0]*wt1;
+        faceEigenvalue32[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvector3Cell[c0][1]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvector3Cell[c1][1]*wt1;
+        faceEigenvalue33[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*(eigenvector3Cell[c0][2]-divUc0/3.0)*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*(eigenvector3Cell[c1][2]-divUc1/3.0)*wt1;
 
         // mu*grad U ^ T + lambda * div U I
 	source[0] = faceMu*(gradF[0][0]*Af[0] + gradF[0][1]*Af[1] + gradF[0][2]*Af[2])
@@ -351,6 +366,7 @@ public:
     source[0] -= faceMuOld*(faceEigenvalue31[0]*Af[2] +faceEigenvalue31[1]*Af[2] + faceEigenvalue31[2]*Af[2]);
     source[1] -= faceMuOld*(faceEigenvalue32[0]*Af[2] +faceEigenvalue32[1]*Af[2] + faceEigenvalue32[2]*Af[2]);
     source[2] -= faceMuOld*(faceEigenvalue33[0]*Af[2] +faceEigenvalue33[1]*Af[2] + faceEigenvalue33[2]*Af[2]);*/
+    
     
     source[0] -= faceMuOld*(faceEigenvalue11[0]*Af[0] +faceEigenvalue21[0]*Af[1] + faceEigenvalue31[0]*Af[2]);
     source[1] -= faceMuOld*(faceEigenvalue12[0]*Af[0] +faceEigenvalue22[0]*Af[1] + faceEigenvalue32[0]*Af[2]);

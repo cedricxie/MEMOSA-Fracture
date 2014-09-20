@@ -753,7 +753,11 @@ for nstep in range(0,numSteps):
                    
                    #decomposeStrainTensor(strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i],eigenvalueFieldsA[i],eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i],\
                    #i,pfperfectFieldsA[i],rank_id)
-           
+                   for j in range (0,3):
+                       eigenvector1FieldsA[i][j]=strainXFieldsA[i][j]
+                       eigenvector2FieldsA[i][j]=strainYFieldsA[i][j]
+                       eigenvector3FieldsA[i][j]=strainZFieldsA[i][j]
+                   
                    if strain_trace[i] >= 0 and SymFlag==2:
                        if V_flag[i] == 1 :
                            #if strain_trace[i] < 1e-1 :
@@ -878,6 +882,9 @@ for nstep in range(0,numSteps):
            strain_dev2_trace=(strainXFieldsA[i][0]-strain_trace_mean)**2+strainXFieldsA[i][1]**2+strainXFieldsA[i][2]**2+\
            strainYFieldsA[i][0]**2+(strainYFieldsA[i][1]-strain_trace_mean)**2+strainYFieldsA[i][2]**2+\
            strainZFieldsA[i][0]**2+strainZFieldsA[i][1]**2+(strainZFieldsA[i][2]-strain_trace_mean)**2
+           strain_2_trace=(strainXFieldsA[i][0])**2+strainXFieldsA[i][1]**2+strainXFieldsA[i][2]**2+\
+           strainYFieldsA[i][0]**2+(strainYFieldsA[i][1])**2+strainYFieldsA[i][2]**2+\
+           strainZFieldsA[i][0]**2+strainZFieldsA[i][1]**2+(strainZFieldsA[i][2])**2
                #if (K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace) > EnergyHistoryField[i]:
                #    ElasticEnergyField[i]=K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace
                #    #EnergyHistoryField[i]=ElasticEnergyField[i]
@@ -906,8 +913,12 @@ for nstep in range(0,numSteps):
            else:
                if strain_trace[i] >0:
                    ElasticEnergyField[i] = K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace
+                   #ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*(eigenvalueFieldsA[i][0]**2.0+eigenvalueFieldsA[i][1]**2.0+eigenvalueFieldsA[i][2]**2.0)
+                   #ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_2_trace
                else: 
                    ElasticEnergyField[i] = G_local[i]*strain_dev2_trace
+                   #ElasticEnergyField[i] = G_local[i]*(eigenvalueFieldsA[i][0]**2.0+eigenvalueFieldsA[i][1]**2.0+eigenvalueFieldsA[i][2]**2.0)
+                   #ElasticEnergyField[i] = G_local[i]*strain_2_trace
                #if i==100:
                #    print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
                #    print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]

@@ -20,8 +20,8 @@ from ComputeForce import *
 from optparse import OptionParser
 from FluentCase import FluentCase
 
-import tecplotEntireStructureDomainPara
-import tecplotEntireFractureDomainPara
+import vtkEntireStructureDomainPara
+import vtkEntireFractureDomainPara
 
 def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pfp_flag,rank):
     zeroThreshold1=1e-12
@@ -741,7 +741,11 @@ for nstep in range(0,numSteps):
                    
                    #decomposeStrainTensor(strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i],eigenvalueFieldsA[i],eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i],\
                    #i,pfperfectFieldsA[i],rank_id)
-           
+                   for j in range (0,3):
+                       eigenvector1FieldsA[i][j]=strainXFieldsA[i][j]
+                       eigenvector2FieldsA[i][j]=strainYFieldsA[i][j]
+                       eigenvector3FieldsA[i][j]=strainZFieldsA[i][j]
+                   
                    if strain_trace[i] >= 0 and SymFlag==2:
                        if V_flag[i] == 1 :
                            #if strain_trace[i] < 1e-1 :
@@ -863,6 +867,9 @@ for nstep in range(0,numSteps):
            strain_dev2_trace=(strainXFieldsA[i][0]-strain_trace_mean)**2+strainXFieldsA[i][1]**2+strainXFieldsA[i][2]**2+\
            strainYFieldsA[i][0]**2+(strainYFieldsA[i][1]-strain_trace_mean)**2+strainYFieldsA[i][2]**2+\
            strainZFieldsA[i][0]**2+strainZFieldsA[i][1]**2+(strainZFieldsA[i][2]-strain_trace_mean)**2
+           strain_2_trace=(strainXFieldsA[i][0])**2+strainXFieldsA[i][1]**2+strainXFieldsA[i][2]**2+\
+           strainYFieldsA[i][0]**2+(strainYFieldsA[i][1])**2+strainYFieldsA[i][2]**2+\
+           strainZFieldsA[i][0]**2+strainZFieldsA[i][1]**2+(strainZFieldsA[i][2])**2
                #if (K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace) > EnergyHistoryField[i]:
                #    ElasticEnergyField[i]=K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace
                #    #EnergyHistoryField[i]=ElasticEnergyField[i]
@@ -891,13 +898,17 @@ for nstep in range(0,numSteps):
            else:
                if strain_trace[i] >0:
                    ElasticEnergyField[i] = K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace
+                   #ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*(eigenvalueFieldsA[i][0]**2.0+eigenvalueFieldsA[i][1]**2.0+eigenvalueFieldsA[i][2]**2.0)
+                   #ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_2_trace
                else: 
                    ElasticEnergyField[i] = G_local[i]*strain_dev2_trace
-               if i==100:
-                   print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
-                   print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
-                   print tractZFieldsA[i][2]
-                   print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
+                   #ElasticEnergyField[i] = G_local[i]*(eigenvalueFieldsA[i][0]**2.0+eigenvalueFieldsA[i][1]**2.0+eigenvalueFieldsA[i][2]**2.0)
+                   #ElasticEnergyField[i] = G_local[i]*strain_2_trace
+               #if i==100:
+               #    print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
+               #    print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
+               #    print tractZFieldsA[i][2]
+               #    print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
                #    #print tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i],V_flag[i]
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + ((PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace)+K_local[i]/2.0*strain_trace_negative**2)*volumeA[i]
            
@@ -1111,28 +1122,11 @@ for nstep in range(0,numSteps):
        else :
            MidOInterval=MidOInterval_l
        #Output Structure Module 
-       if mid_iter % MidOInterval ==0:
-           tecplotEntireStructureDomainPara.dumpTecplotEntireStructureDomain(nmesh,  meshes, fluent_meshes, options.type, structureFields,structure_file_name,title_name,Total_count) 
+       #if mid_iter % MidOInterval ==0:
        #Output Fracture Module 
-       if mid_iter % MidOInterval ==0:
-           tecplotEntireFractureDomainPara.dumpTecplotEntireFractureDomain(nmesh,  meshes, fluent_meshes, options.type, fractureFields,fracture_file_name,title_name,Total_count)
+       #if mid_iter % MidOInterval ==0:
        #Output equilibrium status VTK files
        if mid_iter % MidOInterval ==0:   
-           writer_fracture_iter = exporters.VTKWriterA(geomFields,meshes,"fracture-inter-"+str(nstep)+"-"+str(mid_iter)+"-"+".vtk","fracture output",False,0)
-           writer_fracture_iter.init()
-           writer_fracture_iter.writeScalarField(fractureFields.phasefieldvalue,"PhaseField")
-           writer_fracture_iter.writeVectorField(structureFields.deformation,"Deformation")
-           writer_fracture_iter.finish()
-           writer_structure_iter = exporters.VTKWriterA(geomFields,meshes,"structure-inter-"+str(nstep)+"-"+str(mid_iter)+"-"+".vtk","structure output",False,0)
-           writer_structure_iter.init()
-           writer_structure_iter.writeVectorField(structureFields.deformation,"Deformation")
-           writer_structure_iter.writeVectorField(structureFields.strainX,"StrainX")
-           writer_structure_iter.writeVectorField(structureFields.strainY,"StrainY")
-           writer_structure_iter.writeVectorField(structureFields.strainZ,"StrainZ")
-           writer_structure_iter.writeVectorField(structureFields.tractionX,"TractionX")
-           writer_structure_iter.writeVectorField(structureFields.tractionY,"TractionY")
-           writer_structure_iter.writeVectorField(structureFields.tractionZ,"TractionZ")       
-           writer_structure_iter.finish() 
            Total_count = Total_count +1
        if rank_id == 0 :
            t1 = time.time()
@@ -1186,28 +1180,12 @@ for nstep in range(0,numSteps):
        "\n")
        sp_structure.flush()         
    title_name="Equil "+str(nstep)
+   #if nstep % OInterval ==0:   
    #Output Structure Module 
    if nstep % OInterval ==0:
-       tecplotEntireStructureDomainPara.dumpTecplotEntireStructureDomain(nmesh,  meshes, fluent_meshes, options.type, structureFields,structure_file_name,title_name,Total_count) 
+       vtkEntireStructureDomainPara.dumpvtkEntireStructureDomain(geomFields, nmesh,  meshes, fluent_meshes, options.type, structureFields,structure_file_name,title_name,nstep) 
    #Output Fracture Module 
    if nstep % OInterval ==0:
-       tecplotEntireFractureDomainPara.dumpTecplotEntireFractureDomain(nmesh,  meshes, fluent_meshes, options.type, fractureFields,fracture_file_name,title_name,Total_count)
-   #Output equilibrium status VTK files
-   if nstep % OInterval ==0:   
-       writer_fracture = exporters.VTKWriterA(geomFields,meshes,"fracture-equil-"+str(nstep)+".vtk","fracture output",False,0)
-       writer_fracture.init()
-       writer_fracture.writeScalarField(fractureFields.phasefieldvalue,"PhaseField")
-       writer_fracture.writeVectorField(structureFields.deformation,"Deformation")
-       writer_fracture.finish()
-       writer_structure = exporters.VTKWriterA(geomFields,meshes,"structure-equil-"+str(nstep)+".vtk","structure output",False,0)
-       writer_structure.init()
-       writer_structure.writeVectorField(structureFields.deformation,"Deformation")
-       writer_structure.writeVectorField(structureFields.strainX,"StrainX")
-       writer_structure.writeVectorField(structureFields.strainY,"StrainY")
-       writer_structure.writeVectorField(structureFields.strainZ,"StrainZ")
-       writer_structure.writeVectorField(structureFields.tractionX,"TractionX")
-       writer_structure.writeVectorField(structureFields.tractionY,"TractionY")
-       writer_structure.writeVectorField(structureFields.tractionZ,"TractionZ")      
-       writer_structure.finish()  
-       Total_count = Total_count +1
+       vtkEntireFractureDomainPara.dumpvtkEntireFractureDomain(geomFields, nmesh,  meshes, fluent_meshes, options.type, fractureFields, structureFields,fracture_file_name,title_name,nstep)
+
    #End of Output Equilibrium Status   
