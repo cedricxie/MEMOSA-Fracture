@@ -24,8 +24,8 @@ import vtkEntireStructureDomainPara
 import vtkEntireFractureDomainPara
 
 def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pfp_flag,rank):
-    zeroThreshold1=1e-14
-    zeroThreshold2=1e-3
+    zeroThreshold1=1e-12
+    zeroThreshold2=1e-1
     A=array([strX,strY,strZ])
     #print linalg.det(A),strX,strY,strZ,A[1][1]
     p1 = A[0][1]**2.0 + A[0][2]**2.0 + A[1][2]**2.0
@@ -154,25 +154,21 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pf
                 print "P1,P2,P3: ",P1,P2,P3
                 sys.exit()   
     if eig1<0:
-        evalue[0]=0
+        evalue[0]=eig1
     else:
         evalue[0]=eig1
     if eig2<0:
-        evalue[1]=0
+        evalue[1]=eig2
     else:
         evalue[1]=eig2
     if eig3<0:
-        evalue[2]=0
+        evalue[2]=eig3
     else:
         evalue[2]=eig3
     if pfp_flag==-1:
         evalue[0]=eig1
         evalue[1]=eig2
         evalue[2]=eig3
-    if pfp_flag==-2:
-        evalue[0]=0
-        evalue[1]=0
-        evalue[2]=0
     evector1[0]=P1[0]
     evector1[1]=P1[1]
     evector1[2]=P1[2]
@@ -194,60 +190,62 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pf
 ##########################################################################################   
 # parameter set up
  ########################################################################################## 
-#Miehe-2D
-beamBot = 6
+#multifiber-2layers-3D-coarse
 beamTop = 5
-beamLeft = 4
+beamBot = 6
+beamLeft = 8
 beamRight = 3
-IDs = (3, 4, 5, 6)
-BoundaryPositionTop = 1e-3-1e-5 #Top
-BoundaryPositionRight = 1e-3-1e-5 #Right
-BoundaryPositionLeft = 1e-5
-BoundaryPositionBottom = 1e-5
+beamFront = 4
+beamBack = 7
+IDs = (3, 4, 5, 6, 7, 8)
+BoundaryPositionTop = 16e-6-16e-6/120 #Top
+BoundaryPositionRight = 20e-6-20e-6/150 #Right
+BoundaryPositionLeft = 20e-6/150
+BoundaryPositionBottom = 16e-6/120
 
+#fiber_file_name = "one-fiber-circle"+".txt"
 
 # Set Parameters
-numSteps = 10000			   # Number of Steps
+numSteps = 1000000			   # Number of Steps
 timeStep = 3600                # Size of timestep (seconds)
 numtimeSteps = 1               # Number of timesteps in global combined solution
-numStructIterations = 20       # Number of iterations for structure model, automatically set to 1 when StructIterFlag == 0
+numStructIterations = 5       # Number of iterations for structure model, automatically set to 1 when StructIterFlag == 0
 numPFIterations = 10           # Number of iterations for fracture model
-E = 210e9                    # Matrix Young's Modulus
+E = 1e9                    # Matrix Young's Modulus
 E_fiber=19.5e9                 # Fiber Young's Modulus
-nu = 0.3                      # Matrix Poisson's ratio
+nu = 0.25                      # Matrix Poisson's ratio
 nu_fiber=0.28                  # Fiber Poisson's ratio
 G = E/2.0/(1+nu)               # Shear Modulus
 K = E/3.0/(1-2.0*nu)
-Lamda = nu*E/(1+nu)/(1-1.0*nu) # Lamda
+Lamda = nu*E/(1+nu)/(1-2.0*nu) # Lamda
 Ac =0                          # Creep coefficient 1/hr
-cFED = 2700                    # critical fracture energy density, J/m^2
-cLoC=  0.75e-5                    # model parameter controlling the width of the smooth approximation of the crack, m
+cFED = 5.4                     # critical fracture energy density, J/m^2
+cLoC=  3e-8                    # model parameter controlling the width of the smooth approximation of the crack, m
 Diff = 4.0*cLoC*cLoC           # fracture Conductivity Coefficient
 crackPF = 1e-3			       # Phase Field Value at Crack
-NumofFiber = 0
+NumofFiber = 8
 
 DeformUnit = (cFED*BoundaryPositionTop/Lamda)**0.5  #Normalized Displacement Unit
-DispStep = 0.02*DeformUnit	   # Displacement Step
-#DispStep = 1e-8
+DispStep = 0.03*DeformUnit	   # Displacement Step
 StressStep = 1e6
 
-OInterval_s = 1                 #Output interval for equilibrium status
-OInterval_l = 50
+OInterval_s = 4                 #Output interval for equilibrium status
+OInterval_l = 20
 MidOInterval_s = 50              #Output interval for intermediate status
 MidOInterval_l = 50
-OPFLimit = 0.02
+OPFLimit = 0.04
 OUpLimit=40                   #Upper Limit for large displacement step
 DispReFactor=1.0               #Smaller displacement step is: 1/DispReFactor of larger displacement step
-MidIterUpLimit = 50
+MidIterUpLimit = 80
 
-StiffnessResidual = 1e-6       #Used to have a lower bound of the material constant for damaged cell
-StructTolerance = 5e-4         #Tolerance for structure model inner iteration
-StructOuterTolerance = 5e-4
+StiffnessResidual = 1e-5       #Used to have a lower bound of the material constant for damaged cell
+StructTolerance = 1e-3         #Tolerance for structure model inner iteration
+StructOuterTolerance = 1e-3
 StructIterFlag = 1             #1--Do structure model iteration; 0--No structure model iteration
-StructIterUpLimit = 40
+StructIterUpLimit = 50
 
-PFTolerance = 5e-4             #Tolerance for fracture model iteration
-PFOuterTolerance = 5e-4
+PFTolerance = 1e-3             #Tolerance for fracture model iteration
+PFOuterTolerance = 1e-3
 PFIterFlag = 1                 #1--Do convergence test iteration; 0--No convergence test iteration
 
 PerfectRad = 0e-3
@@ -259,7 +257,7 @@ inter_status_file_name = "tecplotresult_inter-pmma-fiber" + ".dat"
 equil_status_file_name = "tecplotresult_equil-pmma-fiber" + ".dat"
 fracture_file_name = "tecplotresult_fracture-pmma-fiber" + ".dat" 
 
-fiber_file_name = "fiber"+".txt"  
+fiber_file_name = "fiber-0.55-3D"+".txt"  
 
 ##########################################################################################
 #End of parameter set up
@@ -336,11 +334,14 @@ for vc in vcMap.values():
     vc.setVar('fractureConductivity',Diff)
 
 StructurebcMap = smodel.getBCMap()
-
 for id in [beamRight]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
         bc.bcType = 'Symmetry'
+        #bc.bcType = 'SpecifiedDeformation'
+        #bc['specifiedXDeformation'] = 0
+        #bc['specifiedYDeformation'] = 0
+        #bc['specifiedZDeformation'] = 0
         #bc.bcType = 'SpecifiedTraction'
         #bc['specifiedXXTraction'] = 0
         #bc['specifiedYXTraction'] = 0
@@ -348,40 +349,55 @@ for id in [beamRight]:
 for id in [beamTop]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        #bc.bcType = 'SpecifiedTraction'
-        #bc['specifiedXYTraction'] = 0
-        #bc['specifiedYYTraction'] = 0
-        #bc['specifiedZYTraction'] = 0
+        #bc.bcType = 'Symmetry'
         bc.bcType = 'SpecifiedDeformation'
         bc['specifiedXDeformation'] = 0
         bc['specifiedYDeformation'] = 0
         bc['specifiedZDeformation'] = 0
+        #bc.bcType = 'SpecifiedTraction'
+        #bc['specifiedXYTraction'] = 0
+        #bc['specifiedYYTraction'] = 0
+        #bc['specifiedZYTraction'] = 0
 for id in [beamBot]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        #bc.bcType = 'SpecifiedTraction'
-        #bc['specifiedXXTraction'] = 0
-        #bc['specifiedYXTraction'] = 0
-        #bc['specifiedZXTraction'] = 0
         bc.bcType = 'Symmetry'
-        #bc.bcType = 'SpecifiedDeformation'
-        #bc['specifiedXDeformation'] = 0
-        #bc['specifiedYDeformation'] = 0
-        #bc['specifiedZDeformation'] = 0
+        #bc.bcType = 'SpecifiedTraction'
+        #bc['specifiedXYTraction'] = 0
+        #bc['specifiedYYTraction'] = 0
+        #bc['specifiedZYTraction'] = 0
 for id in [beamLeft]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
         bc.bcType = 'Symmetry'
-
-
+        #bc.bcType = 'SpecifiedTraction'
+        #bc['specifiedXXTraction'] = 0
+        #bc['specifiedYXTraction'] = 0
+        #bc['specifiedZXTraction'] = 0
+for id in [beamFront]:
+    if id in StructurebcMap:
+        bc = StructurebcMap[id]
+        bc.bcType = 'Symmetry'
+        #bc.bcType = 'SpecifiedTraction'
+        #bc['specifiedXXTraction'] = 0
+        #bc['specifiedYXTraction'] = 0
+        #bc['specifiedZXTraction'] = 0
+for id in [beamBack]:
+    if id in StructurebcMap:
+        bc = StructurebcMap[id]
+        bc.bcType = 'Symmetry'
+        #bc.bcType = 'SpecifiedTraction'
+        #bc['specifiedXXTraction'] = 0
+        #bc['specifiedYXTraction'] = 0
+        #bc['specifiedZXTraction'] = 0
 
 vcMap = smodel.getVCMap()
 for i,vc in vcMap.iteritems():
     vc['density'] = 8912
     vc['eta'] = E/(2.*(1+nu))
-    vc['eta1'] = nu*E/((1+nu)*(1-1.0*nu))
+    vc['eta1'] = nu*E/((1+nu)*(1-2.0*nu))
     vc['etaold'] = E/(2.*(1+nu))
-    vc['eta1old'] = nu*E/((1+nu)*(1-1.0*nu))
+    vc['eta1old'] = nu*E/((1+nu)*(1-2.0*nu))
     vc['pfv'] = 1.0
 ##########################################################################################
 #End of the boundary conditions set up
@@ -442,6 +458,7 @@ soptions.creep = False
 ##########################################################################################
 rank_id=MPI.COMM_WORLD.Get_rank()
 if rank_id == 0:
+   print "Starting model initialization"
    f_structure = open(structure_file_name, 'w')
    f_structure.close()
    ss_structure = open(inter_status_file_name,'w')
@@ -454,17 +471,29 @@ if NumofFiber!=0:
     fiber_r = []
     fiber_x = []
     fiber_y = []
+    fiber_z = []
+    fiber_direction_x = []
+    fiber_direction_y = []
+    fiber_direction_z = []
     fiber_count = 1
     for line in f_fiber:
-        if(fiber_count % 3 ==1):
+        if(fiber_count % 7 ==1):
             fiber_r.append(float(line))
-        if(fiber_count % 3 ==2):
+        if(fiber_count % 7 ==2):
             fiber_x.append(float(line))
-        if(fiber_count % 3 ==0):
+        if(fiber_count % 7 ==3):
             fiber_y.append(float(line))
+        if(fiber_count % 7 ==4):
+            fiber_z.append(float(line))
+        if(fiber_count % 7 ==5):
+            fiber_direction_x.append(float(line))
+        if(fiber_count % 7 ==6):
+            fiber_direction_y.append(float(line))  
+        if(fiber_count % 7 ==0):
+            fiber_direction_z.append(float(line))          
         fiber_count=fiber_count+1
-    for i in range(0,NumofFiber):
-        print fiber_r[i],fiber_x[i],fiber_y[i]
+    #for i in range(0,NumofFiber):
+    #    print fiber_r[i],fiber_x[i],fiber_y[i],fiber_z[i],fiber_direction_x[i],fiber_direction_y[i],fiber_direction_z[i]
     f_fiber.close()
 
 EnergyHistoryField = []
@@ -490,6 +519,7 @@ G_local = []
 
 strain_trace = []
 ElasticEnergyField = []
+fractureToughnessField = []
 
 compress_found_flag  = array([0.0])
 struct_outer_tol_flag = array([0.0])
@@ -534,38 +564,15 @@ for n in range(0,nmesh):
     PhaseField = fractureFields.phasefieldvalue[cellSitesLocal[n]]
     PhaseFieldA = PhaseField.asNumPyArray()
     for i in range(0,Count):
-
-        E_local.append(E)
-        nu_local.append(nu)
-        K_local.append(\
-        9.0*K*G/(3.0*K+4.0*G)
-        #K
-        )
-        #Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
-        Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-1.0*nu_local[i]) )
-        G_local.append(E_local[i]/(2.*(1+nu_local[i])))
-
 ################Pre-defined crack#####################
         PFHistoryField.append(1.0)
-        if (coordA[i,0]-0.0)>0.0 and\
-        (coordA[i,0]-0.001/2.0)<0.0 and\
-        (coordA[i,1]-0.001/2.0+cLoC)>0.0 and\
-        (coordA[i,1]-0.001/2.0-cLoC)<0.0:
-            PFHistoryField[i]=0.0   
-            pfperfectFieldsA[i]=-1
-            pfvFieldsA[i]=0
-            PhaseFieldA[i]=0
-        if (coordA[i,0]-0.0)>0.0 and\
-        (coordA[i,0]-0.0)<0.0 and\
-        (coordA[i,1]-0.001/2.0+cLoC)>0.0 and\
-        (coordA[i,1]-0.001/2.0-cLoC)<0.0:
-            PFHistoryField[i]=0   
-            pfperfectFieldsA[i]=-2
-            pfvFieldsA[i]=0
-            PhaseFieldA[i]=0
-            etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-            eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-            
+        #if (coordA[i,0]-0.0)>0.0 and\
+        #(coordA[i,0]-0.1/2.0)<0.0 and\
+        #(coordA[i,1]-0.04/2.0+1e-4)>0.0 and\
+        #(coordA[i,1]-0.04/2.0-1e-4)<0.0:
+        #    PFHistoryField[i]=0   
+        #    pfperfectFieldsA[i]=-1  
+        #    pfvFieldsA[i]=0.0
 ################Forcing perfect region################  
         if (coordA[i,1]-0.0)**2.0<PerfectRad**2.0 or\
         (coordA[i,1]-4e-2)**2.0<PerfectRad**2.0:
@@ -589,13 +596,78 @@ for n in range(0,nmesh):
         ElasticEnergyField.append(0)
         EnergyHistoryField.append(0)
 
-        for fiber_count in range(0,NumofFiber) :
-            if((coordA[i,0]-fiber_x[fiber_count])**2+\
-            (coordA[i,1]-fiber_y[fiber_count])**2)<fiber_r[fiber_count]**2:
+        E_local.append(E)
+        nu_local.append(nu)
+        K_local.append(\
+        #9.0*K*G/(3.0*K+4.0*G)
+        #K+G/3.0
+        K
+        )
+        Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
+        G_local.append(E_local[i]/(2.*(1+nu_local[i])))
+        fractureToughnessField.append(cFED)
+
+        for j in range(0,NumofFiber) :
+            if fiber_direction_x[j]!=0:
+                if fiber_direction_y[j]!=0 and fiber_direction_z[j]!=0:
+                    temp_x=(coordA[i,0]*fiber_direction_x[j]+coordA[i,1]*fiber_direction_y[j]+coordA[i,2]*fiber_direction_z[j]+\
+                    fiber_x[j]*(fiber_direction_y[j]**2.0/fiber_direction_x[j]+fiber_direction_z[j]**2.0/fiber_direction_x[j])-\
+                    fiber_y[j]*fiber_direction_y[j]-fiber_z[j]*fiber_direction_z[j])/\
+                    (fiber_direction_x[j]+fiber_direction_y[j]**2.0/fiber_direction_x[j]+fiber_direction_z[j]**2.0/fiber_direction_x[j])
+                    temp_y=(temp_x-fiber_x[j])/fiber_direction_x[j]*fiber_direction_y[j]+fiber_y[j]
+                    temp_z=(temp_x-fiber_x[j])/fiber_direction_x[j]*fiber_direction_z[j]+fiber_z[j]
+                elif fiber_direction_y[j]!=0 :
+                    temp_x=(coordA[i,0]*fiber_direction_x[j]+coordA[i,1]*fiber_direction_y[j]+coordA[i,2]*fiber_direction_z[j]+\
+                    fiber_x[j]*(fiber_direction_y[j]**2.0/fiber_direction_x[j])-\
+                    fiber_y[j]*fiber_direction_y[j]-fiber_z[j]*fiber_direction_z[j])/\
+                    (fiber_direction_x[j]+fiber_direction_y[j]**2.0/fiber_direction_x[j])
+                    temp_y=(temp_x-fiber_x[j])/fiber_direction_x[j]*fiber_direction_y[j]+fiber_y[j]
+                    temp_z=fiber_z[j]                    
+                elif fiber_direction_z[j]!=0 :
+                    temp_x=(coordA[i,0]*fiber_direction_x[j]+coordA[i,1]*fiber_direction_y[j]+coordA[i,2]*fiber_direction_z[j]+\
+                    fiber_x[j]*(fiber_direction_z[j]**2.0/fiber_direction_x[j])-\
+                    fiber_y[j]*fiber_direction_y[j]-fiber_z[j]*fiber_direction_z[j])/\
+                    (fiber_direction_x[j]+fiber_direction_z[j]**2.0/fiber_direction_x[j])
+                    temp_y=fiber_y[j]
+                    temp_z=(temp_x-fiber_x[j])/fiber_direction_x[j]*fiber_direction_z[j]+fiber_z[j]
+                else:
+                    temp_x=(coordA[i,0]*fiber_direction_x[j]+coordA[i,1]*fiber_direction_y[j]+coordA[i,2]*fiber_direction_z[j]-\
+                    fiber_y[j]*fiber_direction_y[j]-fiber_z[j]*fiber_direction_z[j])/\
+                    (fiber_direction_x[j])
+                    temp_y=fiber_y[j]
+                    temp_z=fiber_z[j]
+            elif fiber_direction_y[j]!=0:
+                if fiber_direction_z[j]!=0:
+                    temp_x=fiber_x[j]
+                    temp_y=(coordA[i,0]*fiber_direction_x[j]+coordA[i,1]*fiber_direction_y[j]+coordA[i,2]*fiber_direction_z[j]+\
+                    fiber_y[j]*(fiber_direction_z[j]**2.0/fiber_direction_y[j])-\
+                    fiber_x[j]*fiber_direction_x[j]-fiber_z[j]*fiber_direction_z[j])/\
+                    (fiber_direction_y[j]+fiber_direction_z[j]**2.0/fiber_direction_y[j])
+                    temp_z=(temp_y-fiber_y[j])/fiber_direction_y[j]*fiber_direction_z[j]+fiber_z[j]                
+                else :
+                    temp_x=fiber_x[j]
+                    temp_y=(coordA[i,0]*fiber_direction_x[j]+coordA[i,1]*fiber_direction_y[j]+coordA[i,2]*fiber_direction_z[j]-\
+                    fiber_x[j]*fiber_direction_x[j]-fiber_z[j]*fiber_direction_z[j])/\
+                    (fiber_direction_y[j])
+                    temp_z=fiber_z[j]                 
+            else:
+                temp_x=fiber_x[j]
+                temp_y=fiber_y[j]
+                temp_z=(coordA[i,0]*fiber_direction_x[j]+coordA[i,1]*fiber_direction_y[j]+coordA[i,2]*fiber_direction_z[j]-\
+                fiber_x[j]*fiber_direction_x[j]-fiber_y[j]*fiber_direction_y[j])/\
+                (fiber_direction_z[j])             
+                
+            if (coordA[i,0]-temp_x)**2.0+(coordA[i,1]-temp_y)**2.0+(coordA[i,2]-temp_z)**2.0 < fiber_r[j]**2.0:
                 E_local[i]=E_fiber
                 nu_local[i]=nu_fiber
+                Lamda_local[i]=(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
+                G_local[i]=(E_local[i]/(2.*(1+nu_local[i]))) 
+                K_local[i]=Lamda_local[i]+2.0/3.0*G_local[i]
                 fractureToughnessField[i]=cFED*100.0
-
+if rank_id == 0:
+   print "Ending model initialization"
+   t1 = time.time()
+   print "TIME ELAPSE: ",t1-t0
 ##########################################################################################
 # End of Model Initialization
 ##########################################################################################
@@ -617,7 +689,6 @@ for nstep in range(0,numSteps):
        if id in StructurebcMap:
            bc = StructurebcMap[id]
            bc['specifiedYDeformation'] = Displacement
-           #bc['specifiedYYTraction'] = ExternalStress
 
 ##########################################################################################
 # Start of Middle Loop Iteration
@@ -691,10 +762,10 @@ for nstep in range(0,numSteps):
                if rank_id==0:
                    if struct_inner_flag[0] == 1 :
                        print "Structure inner loop keeps iterating ",deformation_change_max[0],deformation_change_max[0]/DeformUnit,StructTolerance,\
-                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1]
+                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],"\n"
                    if struct_inner_flag[0] == 0 :
                        print "Structure inner loop finished ",deformation_change_max[0],deformation_change_max[0]/DeformUnit,StructTolerance,\
-                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],
+                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],"\n"
 ##########################################################################################
 # End of Structure Inner Loop Iteration
 ##########################################################################################    
@@ -807,26 +878,29 @@ for nstep in range(0,numSteps):
                if struct_outer_iter==1:
                    struct_outer_flag[0]=1
                    if rank_id==0:
-                       print "Doing it one more time"           
+                       print "Doing it one more time","\n"           
                elif compress_found_flag[0]==1 and struct_outer_tol_flag[0] == 0:
                    struct_outer_flag[0]=1
                    if rank_id==0:
-                       print "Skipping fracture model from compress-found",deformation_change_max[0]/DeformUnit,deformation_change_max[0]
+                       print "Skipping fracture model from compress-found",deformation_change_max[0]/DeformUnit,deformation_change_max[0],"\n"
                elif compress_found_flag[0]==0 and struct_outer_tol_flag[0] == 0 and struct_override_count<StructIterUpLimit:
                    struct_outer_flag[0]=1
                    struct_override_count=struct_override_count+1
                    if rank_id==0:
-                       print "Skipping fracture model from tolerance",deformation_change_max[0]/DeformUnit,deformation_change_max[0],struct_override_count
+                       print "Skipping fracture model from tolerance",deformation_change_max[0]/DeformUnit,deformation_change_max[0],struct_override_count,"\n"
                elif compress_found_flag[0]==0 and struct_outer_tol_flag[0] == 0 and struct_override_count>=StructIterUpLimit:
                    if rank_id==0:
-                       print "Getting out of structure model But violating tolerance",deformation_change_max[0]/DeformUnit,deformation_change_max[0],struct_override_count
+                       print "Getting out of structure model But violating tolerance",deformation_change_max[0]/DeformUnit,deformation_change_max[0],struct_override_count,"\n"
                elif compress_found_flag[0]==1 and struct_outer_tol_flag[0] == 1:
                    if rank_id==0:
-                       print "Getting out of structure model But violating compress-found ",deformation_change_max[0]/DeformUnit,deformation_change_max[0]
+                       print "Getting out of structure model But violating compress-found ",deformation_change_max[0]/DeformUnit,deformation_change_max[0],"\n"
                else:
                    if rank_id==0:
                        print "Getting out of structure model ",deformation_change_max[0]/DeformUnit,deformation_change_max[0],\
-                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],PhaseFieldA[deformation_change_maxi]
+                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],PhaseFieldA[deformation_change_maxi],"\n"
+               if rank_id==0:
+                   t1 = time.time()
+                   print "TIME ELAPSE: ",t1-t0
 ##########################################################################################
 # End of Structure Outer Loop Iteration
 ##########################################################################################                
@@ -914,12 +988,13 @@ for nstep in range(0,numSteps):
                else: 
                    ElasticEnergyField[i] = G_local[i]*strain_dev2_trace
                    #ElasticEnergyField[i] = G_local[i]*(eigenvalueFieldsA[i][0]**2.0+eigenvalueFieldsA[i][1]**2.0+eigenvalueFieldsA[i][2]**2.0)
-                   #ElasticEnergyField[i] = G_local[i]*strain_2_trace               #if coordA[i,0]>0.05-2.0*cLoC and coordA[i,0]<0.05+2.0*cLoC and coordA[i,1]>0.02-2.0*cLoC and coordA[i,1]<0.02+2.0*cLoC:
-               #    print "Cord. and Energy:",coordA[i,0],coordA[i,1],ElasticEnergyField[i],strain_trace[i],eigenvalue1_positive[0],eigenvalue2_positive[0],eigenvalue3_positive[0]
-               #    print "Strain tensor:",strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
-               #    print "Eigenvalue:",eigenvalueFieldsA[i]
-               #    print "Eigenvector:",eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
-               #    print "Traction and phase field:",tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i]
+                   #ElasticEnergyField[i] = G_local[i]*strain_2_trace
+               #if i==100:
+               #    print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
+               #    print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
+               #    print tractZFieldsA[i][2]
+               #    print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
+               #    #print tractXFieldsA[i][0],tractYFieldsA[i][1],tractZFieldsA[i][2],pfvFieldsA[i],V_flag[i]
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + ((PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace)+K_local[i]/2.0*strain_trace_negative**2)*volumeA[i]
            
            Total_Compression_Elastic_Energy[0] = Total_Compression_Elastic_Energy[0] + K_local[i]/2.0*strain_trace_negative**2
@@ -1030,7 +1105,7 @@ for nstep in range(0,numSteps):
    
        #Update SourceCoef for Fracture Model   
        for i in range(0,Count):  
-           sourceCoefFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/cFED+1.0)                 
+           sourceCoefFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]+1.0)                 
  ########################################################################################## 
 # Start of the fracture model
  ########################################################################################## 
@@ -1047,7 +1122,7 @@ for nstep in range(0,numSteps):
                            PhaseFieldA[i]=pfperfectFieldsA[i]
                        if PhaseFieldA[i]>PFHistoryField[i]:
                            PhaseFieldA[i]=PFHistoryField[i]
-                       sourceFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/cFED+1.0)*PhaseFieldA[i]
+                       sourceFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]+1.0)*PhaseFieldA[i]
                tmodel.advance(1)
                
            for i in range(0,Count):
@@ -1059,7 +1134,7 @@ for nstep in range(0,numSteps):
                    
            for n in range(0,nmesh):
                for i in range(0,Count):
-                   sourceFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/cFED+1.0)*PhaseFieldA[i]
+                   sourceFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]+1.0)*PhaseFieldA[i]
            tmodel.advance(1)
            
            fract_inner_flag[0] = 0
@@ -1118,12 +1193,8 @@ for nstep in range(0,numSteps):
            #    #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            #    #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            else :
-               if pfperfectFieldsA[i]==-2:
-                   etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-                   eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-               else:
-                   etaFieldsA[i]=G_local[i]
-                   eta1FieldsA[i]=Lamda_local[i]
+               etaFieldsA[i]=G_local[i]
+               eta1FieldsA[i]=Lamda_local[i]
                #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                #eta1FieldsA[i]=Lamda_local[i]+G_local[i]*2.0/3.0*(1-(PhaseFieldA[i]**2.0+StiffnessResidual))
@@ -1143,8 +1214,8 @@ for nstep in range(0,numSteps):
        if mid_iter % MidOInterval ==0:   
            Total_count = Total_count +1
        if rank_id == 0 :
-           t1 = time.time()
-           print "TIME ELAPSE: ",t1-t0
+           t2 = time.time()
+           print "TIME ELAPSE: ",t2-t0
            #write intermediate status file
            ss_structure.write(str(Displacement) + " " + str(LoadingTop[0]) + " "+ str(LoadingRight[0]) + " " +str(LoadingLeft[0])+ " " +str(LoadingBottom[0])+ " "  + str(t1-t0) + " " +str(Max_Vol_Stress[0])+ " "+str(Max_Dev_Stress[0])+ " "+ str(PF_min[0]) + " "+ str(PF_change_max[0]) +"\n")
            ss_structure.flush()  
