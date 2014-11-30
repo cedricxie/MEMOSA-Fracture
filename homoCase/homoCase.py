@@ -552,15 +552,16 @@ for n in range(0,nmesh):
     for i in range(0,Count):
 ################Pre-defined crack#####################
         PFHistoryField.append(1.0)
+        pfperfectFieldsA[i]=0
         #if (coordA[i,0]-0.0)>0.0 and\
         #(coordA[i,0]-0.1/2.0)<0.0 and\
         #(coordA[i,1]-0.04/2.0+1e-4)>0.0 and\
         #(coordA[i,1]-0.04/2.0-1e-4)<0.0:
         #    PFHistoryField[i]=0 
         #    pfperfectFieldsA[i]=-1 
-        PFHistoryField[i]=0.5
-        pfperfectFieldsA[i]=-1 
-        pfvFieldsA[i]=0.5
+        #PFHistoryField[i]=0.5
+        #pfperfectFieldsA[i]=-1 
+        #pfvFieldsA[i]=0.5
 ################Forcing perfect region################  
         if (coordA[i,1]-0.0)**2.0<PerfectRad**2.0 or\
         (coordA[i,1]-4e-2)**2.0<PerfectRad**2.0:
