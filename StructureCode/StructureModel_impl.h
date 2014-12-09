@@ -258,6 +258,7 @@ public:
             if (bValue[f][i]!=0.0){
             //cout << "bValue " <<  bValue[f][i] <<  endl;
             this->_x[c1][i]=bValue[f][i];
+            //this->_x[c0][i]=bValue[f][i];
             }
         }
 
@@ -298,6 +299,15 @@ public:
         // dependance on c0
         this->_assembler.getCoeff10(f) = dxBdxC0;
         this->_r[c1] = xc1mxB;
+        
+        for (int i=0; i<3; i++){
+            if (bValue[f][i]!=0.0){
+            this->_r[c1][i]=0.0;
+            }
+        }
+        
+        //cout << "bValue " <<  bValue[f] << "x[c0] " << this->_x[c0] << "en "<< en <<  endl;
+        //cout << "xc1mxB " <<  xc1mxB << "x[c1] " << this->_x[c1] << endl;
 
     }
   }
