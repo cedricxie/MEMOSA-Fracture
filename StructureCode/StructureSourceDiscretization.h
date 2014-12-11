@@ -49,6 +49,8 @@ public:
 				const Field& eigenvector1Field,
 				const Field& eigenvector2Field,
 				const Field& eigenvector3Field,
+				const Field& structcoef1Field,
+				const Field& structcoef2Field,
 				const Field& varGradientField,
 				const Field& temperatureField,
                                 const T& referenceTemperature,
@@ -72,6 +74,8 @@ public:
     _eigenvector1Field(eigenvector1Field),
     _eigenvector2Field(eigenvector2Field),
     _eigenvector3Field(eigenvector3Field),
+    _structcoef1Field(structcoef1Field),
+    _structcoef2Field(structcoef2Field),
     _varGradientField(varGradientField),
     _temperatureField(temperatureField),
     _referenceTemperature(referenceTemperature),
@@ -177,6 +181,12 @@ public:
       dynamic_cast<const VectorT3Array&>(_eigenvector2Field[cells]);
     const VectorT3Array& eigenvector3Cell =
       dynamic_cast<const VectorT3Array&>(_eigenvector3Field[cells]);
+      
+    const TArray& structcoef1Cell =
+      dynamic_cast<const TArray&>(_structcoef1Field[cells]);
+
+    const TArray& structcoef2Cell =
+      dynamic_cast<const TArray&>(_structcoef2Field[cells]);
 
     const TArray& temperatureCell =
       dynamic_cast<const TArray&>(_temperatureField[cells]);
@@ -227,6 +237,8 @@ public:
 	    T faceLambdaOld(1.0);
         T faceAlpha(1.0);
         T faceTemperature(1.0);
+        T faceStructcoef1(1.0);
+        T faceStructcoef2(1.0);
         
         VectorT3 faceEigenvalue11;
         VectorT3 faceEigenvalue12;
@@ -268,6 +280,8 @@ public:
         faceLambdaOld = lambdaoldCell[c0]*wt0 + lambdaoldCell[c1]*wt1;
         faceAlpha = alphaCell[c0]*wt0 + alphaCell[c1]*wt1;
         faceTemperature = temperatureCell[c0]*wt0 + temperatureCell[c1]*wt1;
+        faceStructcoef1 = structcoef1Cell[c0]*wt0 + structcoef1Cell[c1]*wt1;
+        faceStructcoef2 = structcoef2Cell[c0]*wt0 + structcoef2Cell[c1]*wt1;
         
         /*faceEigenvalue11[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][0]*eigenvector1Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][0]*eigenvector1Cell[c1][0]*wt1;
         faceEigenvalue11[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][0]*eigenvector2Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][0]*eigenvector2Cell[c1][0]*wt1;
@@ -368,21 +382,21 @@ public:
     source[2] -= faceMuOld*(faceEigenvalue33[0]*Af[2] +faceEigenvalue33[1]*Af[2] + faceEigenvalue33[2]*Af[2]);*/
     
     
-    source[0] -= faceMuOld*(faceEigenvalue11[0]*Af[0] +faceEigenvalue21[0]*Af[1] + faceEigenvalue31[0]*Af[2]);
-    source[1] -= faceMuOld*(faceEigenvalue12[0]*Af[0] +faceEigenvalue22[0]*Af[1] + faceEigenvalue32[0]*Af[2]);
-    source[2] -= faceMuOld*(faceEigenvalue13[0]*Af[0] +faceEigenvalue23[0]*Af[1] + faceEigenvalue33[0]*Af[2]);
+    source[0] -= faceStructcoef2*faceMuOld*(faceEigenvalue11[0]*Af[0] +faceEigenvalue21[0]*Af[1] + faceEigenvalue31[0]*Af[2]);
+    source[1] -= faceStructcoef2*faceMuOld*(faceEigenvalue12[0]*Af[0] +faceEigenvalue22[0]*Af[1] + faceEigenvalue32[0]*Af[2]);
+    source[2] -= faceStructcoef2*faceMuOld*(faceEigenvalue13[0]*Af[0] +faceEigenvalue23[0]*Af[1] + faceEigenvalue33[0]*Af[2]);
     
     //printf("source term: %lf, %lf, %lf\n",source[0],source[1],source[2]);
     
     if (divU>0 && (pfperfectCell[c0]!=-1&&pfperfectCell[c1]!=-1)){
-        source[0] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[0];
-        source[1] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[1];
-        source[2] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[2];
+        source[0] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[0];
+        source[1] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[1];
+        source[2] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[2];
     }
     if (pfperfectCell[c0]==-1||pfperfectCell[c1]==-1){
-        source[0] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[0];
-        source[1] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[1];
-        source[2] -= ((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[2];
+        source[0] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[0];
+        source[1] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[1];
+        source[2] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[2];
     }
 
 	if(_thermo)
@@ -572,6 +586,8 @@ private:
   const Field& _eigenvector1Field;
   const Field& _eigenvector2Field;
   const Field& _eigenvector3Field;
+  const Field& _structcoef1Field;
+  const Field& _structcoef2Field;
   const Field& _varGradientField;
   const Field& _temperatureField;
   const T _referenceTemperature;

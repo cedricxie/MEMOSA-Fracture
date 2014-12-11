@@ -47,6 +47,8 @@ struct StructureVC : public FloatVarDict<T>
       this->defineVar("alpha",T(1.0));
       this->defineVar("pfv",T(1.0));
       this->defineVar("pfperfect",T(0.0));
+      this->defineVar("structcoef1",T(1.0));
+      this->defineVar("structcoef2",T(1.0));
   }
   string vcType;
 };

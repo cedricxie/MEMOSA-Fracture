@@ -37,6 +37,8 @@ StructureFields::StructureFields(const string baseName) :
   eigenvector1(baseName + ".eigenvector1"),
   eigenvector2(baseName + ".eigenvector2"),
   eigenvector3(baseName + ".eigenvector3"),
-  pfperfect(baseName + ".pfperfect")
+  pfperfect(baseName + ".pfperfect"),
+  structcoef1(baseName + ".structcoef1"),
+  structcoef2(baseName + ".structcoef2")
 {}
 

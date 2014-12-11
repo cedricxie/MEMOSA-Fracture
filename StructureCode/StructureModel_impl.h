@@ -531,6 +531,14 @@ public:
         *pfperfectCell = vc["pfperfect"];
         _structureFields.pfperfect.addArray(cells,pfperfectCell);
 
+        shared_ptr<TArray> structcoef1Cell(new TArray(cells.getCountLevel1()));
+        *structcoef1Cell = vc["structcoef1"];
+        _structureFields.structcoef1.addArray(cells,structcoef1Cell);
+        
+        shared_ptr<TArray> structcoef2Cell(new TArray(cells.getCountLevel1()));
+        *structcoef2Cell = vc["structcoef2"];
+        _structureFields.structcoef2.addArray(cells,structcoef2Cell);
+
         shared_ptr<TArray> tCell(new TArray(cells.getCountLevel1()));
         *tCell = _options["operatingTemperature"];
         _structureFields.temperature.addArray(cells,tCell);
@@ -570,6 +578,8 @@ public:
      _structureFields.alpha.syncLocal();
      _structureFields.pfv.syncLocal();
       _structureFields.pfperfect.syncLocal();
+      _structureFields.structcoef1.syncLocal();
+      _structureFields.structcoef1.syncLocal();
      _structureFields.density.syncLocal();
      
      
@@ -1106,6 +1116,8 @@ public:
 	      _structureFields.eigenvector1,
 	      _structureFields.eigenvector2,
 	      _structureFields.eigenvector3,
+	      _structureFields.structcoef1,
+	      _structureFields.structcoef2,
 	      _structureFields.deformationGradient,
 	      _structureFields.temperature,
 	      _options["operatingTemperature"],
@@ -1520,6 +1532,9 @@ public:
       const VectorT3Array& eigenvector2 = dynamic_cast<const VectorT3Array&>(_structureFields.eigenvector2[cells]);
       const VectorT3Array& eigenvector3 = dynamic_cast<const VectorT3Array&>(_structureFields.eigenvector3[cells]);
       
+      const TArray& structcoef1 = dynamic_cast<const TArray&>(_structureFields.structcoef1[cells]);
+      const TArray& structcoef2 = dynamic_cast<const TArray&>(_structureFields.structcoef2[cells]); 
+      
       const TArray& temperature = dynamic_cast<const TArray&>(_structureFields.temperature[cells]);
       
       const T two(2.0);
@@ -1556,23 +1571,23 @@ public:
                         -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][2]*eigenvector1[n][2] + eigenvalue[n][1]*eigenvector2[n][2]*eigenvector2[n][2] + eigenvalue[n][2]*eigenvector3[n][2]*eigenvector3[n][2]);*/	  
 
 	  tractionX[n][0] = wgPlusTranspose[0][0]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]
-	                    -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector1[n][0]-(wg[0][0]+wg[1][1]+wg[2][2])/3.0);
+	                    -structcoef2[n]*2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector1[n][0]-(wg[0][0]+wg[1][1]+wg[2][2])/3.0);
 	  tractionX[n][1] = wgPlusTranspose[0][1]*eta[n]
-	                    -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector1[n][1]);
+	                    -structcoef2[n]*2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector1[n][1]);
 	  tractionX[n][2] = wgPlusTranspose[0][2]*eta[n]
-	                    -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector1[n][2]);
+	                    -structcoef2[n]*2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector1[n][2]);
       tractionY[n][0] = wgPlusTranspose[1][0]*eta[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector2[n][0]);
+                        -structcoef2[n]*2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector2[n][0]);
       tractionY[n][1] = wgPlusTranspose[1][1]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector2[n][1]-(wg[0][0]+wg[1][1]+wg[2][2])/3.0);
+                        -structcoef2[n]*2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector2[n][1]-(wg[0][0]+wg[1][1]+wg[2][2])/3.0);
       tractionY[n][2] = wgPlusTranspose[1][2]*eta[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector2[n][2]);
+                        -structcoef2[n]*2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector2[n][2]);
       tractionZ[n][0] = wgPlusTranspose[2][0]*eta[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector3[n][0]);
+                        -structcoef2[n]*2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector3[n][0]);
       tractionZ[n][1] = wgPlusTranspose[2][1]*eta[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector3[n][1]);
+                        -structcoef2[n]*2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector3[n][1]);
       tractionZ[n][2] = wgPlusTranspose[2][2]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector3[n][2]-(wg[0][0]+wg[1][1]+wg[2][2])/3.0);
+                        -structcoef2[n]*2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvector3[n][2]-(wg[0][0]+wg[1][1]+wg[2][2])/3.0);
 
 	  /*tractionX[n][0] = (wgPlusTranspose[0][0]-(wg[0][0]+wg[1][1]+wg[2][2])*2.0/3.0)*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*(eta1[n]+2.0/3.0*eta[n])
 	                    -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(wgPlusTranspose[0][0]/2.0-(wg[0][0]+wg[1][1]+wg[2][2])/3.0);
@@ -1595,15 +1610,15 @@ public:
 
       
       if ((wg[0][0]+wg[1][1]+wg[2][2])>0 && pfperfect[n]!=-1){
-          tractionX[n][0] -= (1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
-          tractionY[n][1] -= (1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
-          tractionZ[n][2] -= (1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
+          tractionX[n][0] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
+          tractionY[n][1] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
+          tractionZ[n][2] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
       
       }
       if (pfperfect[n]==-1){
-          tractionX[n][0] -= (1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
-          tractionY[n][1] -= (1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
-          tractionZ[n][2] -= (1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
+          tractionX[n][0] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
+          tractionY[n][1] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
+          tractionZ[n][2] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
 
       }      
             

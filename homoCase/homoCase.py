@@ -226,7 +226,7 @@ NumofFiber = 0
 DeformUnit = (cFED*BoundaryPositionTop/Lamda)**0.5  #Normalized Displacement Unit
 #DispStep = 0.02*DeformUnit	   # Displacement Step
 DispStep = 1e-6
-StressStep = 2e6
+StressStep = 1e6
 LoadCoef = -0.5
 
 OInterval_s = 1                 #Output interval for equilibrium status
@@ -399,6 +399,8 @@ for i,vc in vcMap.iteritems():
     vc['etaold'] = E/(2.*(1+nu))
     vc['eta1old'] = nu*E/((1+nu)*(1-2.0*nu))
     vc['pfv'] = 1.0
+    vc['structcoef1'] = 0.8
+    vc['structcoef2'] = 0.5
 ##########################################################################################
 #End of the boundary conditions set up
 ##########################################################################################
@@ -547,6 +549,10 @@ for n in range(0,nmesh):
     pfperfectFieldsA = pfperfectFields.asNumPyArray()
     pfvFields = structureFields.pfv[cellSitesLocal[n]]
     pfvFieldsA = pfvFields.asNumPyArray()
+    structcoef1Fields = structureFields.structcoef1[cellSitesLocal[n]]
+    structcoef1FieldsA = structcoef1Fields.asNumPyArray() 
+    structcoef2Fields = structureFields.structcoef2[cellSitesLocal[n]]
+    structcoef2FieldsA = structcoef2Fields.asNumPyArray() 
     PhaseField = fractureFields.phasefieldvalue[cellSitesLocal[n]]
     PhaseFieldA = PhaseField.asNumPyArray()
     for i in range(0,Count):
@@ -915,17 +921,17 @@ for nstep in range(0,numSteps):
 
            if SymFlag==1:
                if strain_trace[i] >0:
-                   ElasticEnergyField[i] = K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace
+                   ElasticEnergyField[i] = structcoef1FieldsA[i]*K_local[i]/2.0*strain_trace_positive**2+structcoef2FieldsA[i]*G_local[i]*strain_dev2_trace
                else: 
-                   ElasticEnergyField[i] = K_local[i]/2.0*strain_trace_negative**2+G_local[i]*strain_dev2_trace
+                   ElasticEnergyField[i] = structcoef1FieldsA[i]*K_local[i]/2.0*strain_trace_negative**2+structcoef2FieldsA[i]*G_local[i]*strain_dev2_trace
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + (PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace[i]**2+G_local[i]*strain_dev2_trace)*volumeA[i]
            else:
                if strain_trace[i] >0:
-                   ElasticEnergyField[i] = K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace
+                   ElasticEnergyField[i] = structcoef1FieldsA[i]*K_local[i]/2.0*strain_trace_positive**2+structcoef2FieldsA[i]*G_local[i]*strain_dev2_trace
                    #ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*(eigenvalueFieldsA[i][0]**2.0+eigenvalueFieldsA[i][1]**2.0+eigenvalueFieldsA[i][2]**2.0)
                    #ElasticEnergyField[i] = Lamda_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_2_trace
                else: 
-                   ElasticEnergyField[i] = G_local[i]*strain_dev2_trace
+                   ElasticEnergyField[i] = structcoef2FieldsA[i]*G_local[i]*strain_dev2_trace
                    #ElasticEnergyField[i] = G_local[i]*(eigenvalueFieldsA[i][0]**2.0+eigenvalueFieldsA[i][1]**2.0+eigenvalueFieldsA[i][2]**2.0)
                    #ElasticEnergyField[i] = G_local[i]*strain_2_trace
                if i==100:
