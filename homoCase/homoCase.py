@@ -1107,8 +1107,8 @@ for nstep in range(0,numSteps):
            #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            #eta1FieldsA[i]=Lamda_local[i]*PhaseFieldA[i]**2.0
            if SymFlag==1:
-               etaFieldsA[i]=G_local[i]
-               #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+               #etaFieldsA[i]=G_local[i]
+               etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            #elif V_flag[i]==0:
            #    etaFieldsA[i]=G_local[i]
