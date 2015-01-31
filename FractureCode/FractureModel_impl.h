@@ -359,7 +359,7 @@ public:
             gbc.applyInterfaceBC();
         }
     }
-#if 1
+#if 0
     shared_ptr<Discretization>
       ud(new Underrelaxer<T,T,T>
          (_meshes,_fractureFields.phasefieldvalue,
