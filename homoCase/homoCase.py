@@ -249,7 +249,7 @@ PFOuterTolerance = 1e-5
 PFIterFlag = 1                 #1--Do convergence test iteration; 0--No convergence test iteration
 
 PerfectRad = 0e-3
-SymFlag = 0 # 1--Symmetric 0--Asymmetric
+SymFlag = 1 # 1--Symmetric 0--Asymmetric
 trace_change_threshold = 1e-8
 
 structure_file_name = "tecplotresult_structure-pmma-fiber" + ".dat"
@@ -399,8 +399,8 @@ for i,vc in vcMap.iteritems():
     vc['etaold'] = E/(2.*(1+nu))
     vc['eta1old'] = nu*E/((1+nu)*(1-2.0*nu))
     vc['pfv'] = 1.0
-    vc['structcoef1'] = 0.8
-    vc['structcoef2'] = 0.5
+    vc['structcoef1'] = 1.0
+    vc['structcoef2'] = 1.0
 ##########################################################################################
 #End of the boundary conditions set up
 ##########################################################################################
@@ -924,6 +924,11 @@ for nstep in range(0,numSteps):
                    ElasticEnergyField[i] = structcoef1FieldsA[i]*K_local[i]/2.0*strain_trace_positive**2+structcoef2FieldsA[i]*G_local[i]*strain_dev2_trace
                else: 
                    ElasticEnergyField[i] = structcoef1FieldsA[i]*K_local[i]/2.0*strain_trace_negative**2+structcoef2FieldsA[i]*G_local[i]*strain_dev2_trace
+               if i==100:
+                   print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
+                   print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
+                   print tractZFieldsA[i][2]
+                   print eigenvector1FieldsA[i],eigenvector2FieldsA[i],eigenvector3FieldsA[i]
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + (PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace[i]**2+G_local[i]*strain_dev2_trace)*volumeA[i]
            else:
                if strain_trace[i] >0:
@@ -1130,8 +1135,10 @@ for nstep in range(0,numSteps):
            #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            #eta1FieldsA[i]=Lamda_local[i]*PhaseFieldA[i]**2.0
            if SymFlag==1:
-               etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-               eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+               etaFieldsA[i]=G_local[i]
+               eta1FieldsA[i]=Lamda_local[i]
+               #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+               #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            #elif V_flag[i]==0:
            #    etaFieldsA[i]=G_local[i]
            #    eta1FieldsA[i]=Lamda_local[i]
