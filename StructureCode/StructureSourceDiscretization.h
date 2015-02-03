@@ -393,6 +393,11 @@ public:
         source[1] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[1];
         source[2] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[2];
     }
+    if (divU<0 && (pfperfectCell[c0]!=-1&&pfperfectCell[c1]!=-1)){
+        source[0] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[0];
+        source[1] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[1];
+        source[2] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[2];
+    }
     if (pfperfectCell[c0]==-1||pfperfectCell[c1]==-1){
         source[0] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[0];
         source[1] -= faceStructcoef1*((1.0-pfvCell[c0]*pfvCell[c0])*wt0+(1.0-pfvCell[c1]*pfvCell[c1])*wt1)*(faceLambdaOld+2.0/3.0*faceMuOld)*divU*Af[1];

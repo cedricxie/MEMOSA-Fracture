@@ -1698,6 +1698,12 @@ public:
           tractionY[n][1] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
           tractionZ[n][2] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
       
+      }      
+      if ((wg[0][0]+wg[1][1]+wg[2][2])<0 && pfperfect[n]!=-1){
+          tractionX[n][0] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
+          tractionY[n][1] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
+          tractionZ[n][2] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
+      
       }
       if (pfperfect[n]==-1){
           tractionX[n][0] -= structcoef1[n]*(1-pfv[n]*pfv[n])*(eta1old[n]+2.0/3.0*etaold[n])*(wg[0][0]+wg[1][1]+wg[2][2]);
