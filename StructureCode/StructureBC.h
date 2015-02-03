@@ -15,6 +15,9 @@ struct StructureBC : public FloatVarDict<T>
       this->defineVar("specifiedXDeformation",T(0.0));
       this->defineVar("specifiedYDeformation",T(0.0));
       this->defineVar("specifiedZDeformation",T(0.0));
+      this->defineVar("specifiedlSurfingLoadNormFactor",T(1.0));
+      this->defineVar("specifiedlSurfingLoadNum",T(1.0));
+      this->defineVar("specifiedlSurfingLoadSpeed",T(1.0));
       this->defineVar("specifiedXXTraction",T(0.0));
       this->defineVar("specifiedXYTraction",T(0.0));
       this->defineVar("specifiedXZTraction",T(0.0));
