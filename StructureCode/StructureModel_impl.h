@@ -118,6 +118,21 @@ public:
     return fluxB;
   }
   
+  void applySurfingFixedXBC(const FloatValEvaluator<X>& surfingParameters, const FloatValEvaluator<X>& bValue ) const
+  {
+    X fluxB(NumTypeTraits<X>::getZero());
+    for(int f=0; f<this->_faces.getCount(); f++)
+    {
+        const int c1 = this->_faceCells(f,1);
+        X surfingbValue;
+        for (int i=0; i<3; i++){
+            surfingbValue[i] = bValue[f][i]/2.0*( 1-tanh((_xc[c1][0]-surfingParameters[f][1]*surfingParameters[f][2])/surfingParameters[f][0]) );
+        }
+        fluxB += applyDirichletBC(f,surfingbValue);
+    }
+    //return fluxB;
+  }
+  
   X applyNeumannBC(const int f,
                       const X& specifiedFlux) const
   {
@@ -1070,6 +1085,21 @@ public:
 		  				bc.getVal("specifiedlSurfingLoadSpeed"),
 		  				faces);
                 gbc.applySurfingXBC(surfingParameters, bDeformation);
+                allNeumann = false;
+	    }
+            else if (bc.bcType == "SurfingFixedX")
+            {
+	        FloatValEvaluator<VectorT3>
+		  bDeformation(bc.getVal("specifiedXDeformation"),
+			       bc.getVal("specifiedYDeformation"),
+			       bc.getVal("specifiedZDeformation"),
+			       faces);
+			FloatValEvaluator<VectorT3>
+		  surfingParameters(bc.getVal("specifiedlSurfingLoadNormFactor"),
+		  				bc.getVal("specifiedlSurfingLoadNum"),
+		  				bc.getVal("specifiedlSurfingLoadSpeed"),
+		  				faces);
+                gbc.applySurfingFixedXBC(surfingParameters, bDeformation);
                 allNeumann = false;
 	    }
             else if (bc.bcType == "Interface")
