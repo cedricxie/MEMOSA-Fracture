@@ -133,6 +133,36 @@ public:
     //return fluxB;
   }
   
+  void applySurfing2FixedXBC(const FloatValEvaluator<X>& surfingParameters, const FloatValEvaluator<X>& bValue ) const
+  {
+    X fluxB(NumTypeTraits<X>::getZero());
+    double theta,distance;
+    double speed;
+    
+    speed = 1.0*6e-6;
+    
+    for(int f=0; f<this->_faces.getCount(); f++)
+    {
+        const int c1 = this->_faceCells(f,1);
+        X surfingbValue;
+        
+        if (_xc[c1][0]-surfingParameters[f][2]*speed<surfingParameters[f][0])
+            theta = atan(abs(_xc[c1][1]-surfingParameters[f][1])/(_xc[c1][0]-surfingParameters[f][2]*speed-surfingParameters[f][0]))+3.1415926535;
+        else if (_xc[c1][0]==surfingParameters[f][0])
+            theta = 3.1415926535/2.0;
+        else
+            theta = atan(abs(_xc[c1][1]-surfingParameters[f][1])/(_xc[c1][0]-surfingParameters[f][2]*speed-surfingParameters[f][0]));
+        
+        distance = sqrt((_xc[c1][0]-surfingParameters[f][2]*speed-surfingParameters[f][0])*(_xc[c1][0]-surfingParameters[f][2]*speed-surfingParameters[f][0])+(_xc[c1][1]-surfingParameters[f][1])*(_xc[c1][1]-surfingParameters[f][1]));
+        
+        for (int i=0; i<3; i++){
+            surfingbValue[i] = bValue[f][i]* sqrt(distance/2.0/3.1415926535)*(3.0-4.0*0.33-cos(theta))*sin(theta/2.0);
+        }
+        fluxB += applyDirichletBC(f,surfingbValue);
+    }
+    //return fluxB;
+  }
+
   X applyNeumannBC(const int f,
                       const X& specifiedFlux) const
   {
@@ -1100,6 +1130,21 @@ public:
 		  				bc.getVal("specifiedlSurfingLoadSpeed"),
 		  				faces);
                 gbc.applySurfingFixedXBC(surfingParameters, bDeformation);
+                allNeumann = false;
+	    }
+            else if (bc.bcType == "Surfing2FixedX")
+            {
+	        FloatValEvaluator<VectorT3>
+		  bDeformation(bc.getVal("specifiedXDeformation"),
+			       bc.getVal("specifiedYDeformation"),
+			       bc.getVal("specifiedZDeformation"),
+			       faces);
+			FloatValEvaluator<VectorT3>
+		  surfingParameters(bc.getVal("specifiedlSurfingCrackTipX"),
+		  				bc.getVal("specifiedlSurfingCrackTipY"),
+		  				bc.getVal("specifiedlSurfingLoadNum"),
+		  				faces);
+                gbc.applySurfing2FixedXBC(surfingParameters, bDeformation);
                 allNeumann = false;
 	    }
             else if (bc.bcType == "Interface")
