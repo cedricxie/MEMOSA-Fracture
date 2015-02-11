@@ -31,6 +31,9 @@ struct StructureFields
   Field strainX;
   Field strainY;
   Field strainZ;
+  Field distortionX;
+  Field distortionY;
+  Field distortionZ;
   Field plasticDiagStrain;
   Field devStress;
   Field VMStress;

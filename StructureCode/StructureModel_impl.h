@@ -1804,6 +1804,21 @@ public:
     _structureFields.strainZ.addArray(cells,strainZPtr);
     VectorT3Array& strainZ = *strainZPtr;
 
+    shared_ptr<VectorT3Array> distortionXPtr(new VectorT3Array(nCells));
+    distortionXPtr->zero();
+    _structureFields.distortionX.addArray(cells,distortionXPtr);
+    VectorT3Array& distortionX = *distortionXPtr;
+
+    shared_ptr<VectorT3Array> distortionYPtr(new VectorT3Array(nCells));
+    distortionYPtr->zero();
+    _structureFields.distortionY.addArray(cells,distortionYPtr);
+    VectorT3Array& distortionY = *distortionYPtr;
+
+    shared_ptr<VectorT3Array> distortionZPtr(new VectorT3Array(nCells));
+    distortionZPtr->zero();
+    _structureFields.distortionZ.addArray(cells,distortionZPtr);
+    VectorT3Array& distortionZ = *distortionZPtr;
+
     _deformationGradientModel.compute();
 
     const VGradArray& wGrad =
@@ -1819,6 +1834,18 @@ public:
         for(int i=0;i<3;i++)
           for(int j=0;j<3;j++)
             wgPlusTranspose[i][j] += wg[j][i];
+
+        distortionX[n][0] = wg[0][0];
+        distortionX[n][1] = wg[0][1];
+        distortionX[n][2] = wg[0][2];
+        
+        distortionY[n][0] = wg[1][0];
+        distortionY[n][1] = wg[1][1];
+        distortionY[n][2] = wg[1][2];
+        
+        distortionZ[n][0] = wg[2][0];
+        distortionZ[n][1] = wg[2][1];
+        distortionZ[n][2] = wg[2][2];
 
         strainX[n][0] = half*wgPlusTranspose[0][0];
         strainX[n][1] = half*wgPlusTranspose[0][1];
