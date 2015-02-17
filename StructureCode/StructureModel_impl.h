@@ -163,6 +163,74 @@ public:
     //return fluxB;
   }
 
+  void applySurfing3PlaneStrainBC(const FloatValEvaluator<X>& surfingParameters1, const FloatValEvaluator<X>& surfingParameters2, const FloatValEvaluator<X>& bValue ) const
+  {
+    X fluxB(NumTypeTraits<X>::getZero());
+    double theta,distance;
+    double speed;
+    
+    for(int f=0; f<this->_faces.getCount(); f++)
+    {
+        const int c1 = this->_faceCells(f,1);
+        X surfingbValue;
+        
+        speed = surfingParameters2[f][0];
+        
+        if (_xc[c1][0]-surfingParameters1[f][2]*speed<surfingParameters1[f][0])
+            theta = atan(abs(_xc[c1][1]-surfingParameters1[f][1])/(_xc[c1][0]-surfingParameters1[f][2]*speed-surfingParameters1[f][0]))+3.1415926535;
+        else if (_xc[c1][0]==surfingParameters1[f][0])
+            theta = 3.1415926535/2.0;
+        else
+            theta = atan(abs(_xc[c1][1]-surfingParameters1[f][1])/(_xc[c1][0]-surfingParameters1[f][2]*speed-surfingParameters1[f][0]));
+        
+        distance = sqrt((_xc[c1][0]-surfingParameters1[f][2]*speed-surfingParameters1[f][0])*(_xc[c1][0]-surfingParameters1[f][2]*speed-surfingParameters1[f][0])+(_xc[c1][1]-surfingParameters1[f][1])*(_xc[c1][1]-surfingParameters1[f][1]));
+        
+        surfingbValue[0] = bValue[f][0]* sqrt(distance/2.0/3.1415926535)*(3.0-4.0*surfingParameters2[f][1]-cos(theta))*cos(theta/2.0);
+        if (_xc[c1][1]>surfingParameters1[f][1])
+            surfingbValue[1] = bValue[f][1]* sqrt(distance/2.0/3.1415926535)*(3.0-4.0*surfingParameters2[f][1]-cos(theta))*sin(theta/2.0);
+        else
+            surfingbValue[1] = - bValue[f][1]* sqrt(distance/2.0/3.1415926535)*(3.0-4.0*surfingParameters2[f][1]-cos(theta))*sin(theta/2.0);
+        surfingbValue[2] = bValue[f][2];
+        
+        fluxB += applyDirichletBC(f,surfingbValue);
+    }
+    //return fluxB;
+  }
+
+  void applySurfing3PlaneStressBC(const FloatValEvaluator<X>& surfingParameters1, const FloatValEvaluator<X>& surfingParameters2, const FloatValEvaluator<X>& bValue ) const
+  {
+    X fluxB(NumTypeTraits<X>::getZero());
+    double theta,distance;
+    double speed;
+    
+    for(int f=0; f<this->_faces.getCount(); f++)
+    {
+        const int c1 = this->_faceCells(f,1);
+        X surfingbValue;
+        
+        speed = surfingParameters2[f][0];
+        
+        if (_xc[c1][0]-surfingParameters1[f][2]*speed<surfingParameters1[f][0])
+            theta = atan(abs(_xc[c1][1]-surfingParameters1[f][1])/(_xc[c1][0]-surfingParameters1[f][2]*speed-surfingParameters1[f][0]))+3.1415926535;
+        else if (_xc[c1][0]==surfingParameters1[f][0])
+            theta = 3.1415926535/2.0;
+        else
+            theta = atan(abs(_xc[c1][1]-surfingParameters1[f][1])/(_xc[c1][0]-surfingParameters1[f][2]*speed-surfingParameters1[f][0]));
+        
+        distance = sqrt((_xc[c1][0]-surfingParameters1[f][2]*speed-surfingParameters1[f][0])*(_xc[c1][0]-surfingParameters1[f][2]*speed-surfingParameters1[f][0])+(_xc[c1][1]-surfingParameters1[f][1])*(_xc[c1][1]-surfingParameters1[f][1]));
+        
+        surfingbValue[0] = bValue[f][0]* sqrt(distance/2.0/3.1415926535)*((3.0-surfingParameters2[f][1])/(1.0+surfingParameters2[f][1])-cos(theta))*cos(theta/2.0);
+        if (_xc[c1][1]>surfingParameters1[f][1])
+            surfingbValue[1] = bValue[f][1]* sqrt(distance/2.0/3.1415926535)*((3.0-surfingParameters2[f][1])/(1.0+surfingParameters2[f][1])-cos(theta))*sin(theta/2.0);
+        else
+            surfingbValue[1] = - bValue[f][1]* sqrt(distance/2.0/3.1415926535)*((3.0-surfingParameters2[f][1])/(1.0+surfingParameters2[f][1])-cos(theta))*sin(theta/2.0);
+        surfingbValue[2] = bValue[f][2];
+        
+        fluxB += applyDirichletBC(f,surfingbValue);
+    }
+    //return fluxB;
+  }
+
   X applyNeumannBC(const int f,
                       const X& specifiedFlux) const
   {
@@ -423,6 +491,74 @@ public:
         
         //cout << "bValue " <<  bValue[f] << "x[c0] " << this->_x[c0] << "en "<< en <<  endl;
         //cout << "xc1mxB " <<  xc1mxB << "x[c1] " << this->_x[c1] << endl;
+
+    }
+  }
+  
+  void applySurfing2XBC(const FloatValEvaluator<X>& surfingParameters, const FloatValEvaluator<X>& bValue ) const
+  {
+    double theta,distance;
+    double speed;
+    
+    speed = 1.0*6e-6;
+          
+    for(int f=0; f<this->_faces.getCount(); f++)
+    {
+        const int c0 = this->_faceCells(f,0);
+        const int c1 = this->_faceCells(f,1);
+        X surfingbValue;
+
+        if (_xc[c1][0]-surfingParameters[f][2]*speed<surfingParameters[f][0])
+            theta = atan(abs(_xc[c1][1]-surfingParameters[f][1])/(_xc[c1][0]-surfingParameters[f][2]*speed-surfingParameters[f][0]))+3.1415926535;
+        else if (_xc[c1][0]==surfingParameters[f][0])
+            theta = 3.1415926535/2.0;
+        else
+            theta = atan(abs(_xc[c1][1]-surfingParameters[f][1])/(_xc[c1][0]-surfingParameters[f][2]*speed-surfingParameters[f][0]));
+        
+        distance = sqrt((_xc[c1][0]-surfingParameters[f][2]*speed-surfingParameters[f][0])*(_xc[c1][0]-surfingParameters[f][2]*speed-surfingParameters[f][0])+(_xc[c1][1]-surfingParameters[f][1])*(_xc[c1][1]-surfingParameters[f][1]));
+
+        for (int i=0; i<3; i++){
+        
+            surfingbValue[i] = bValue[f][i]* sqrt(distance/2.0/3.1415926535)*(3.0-4.0*0.33-cos(theta))*sin(theta/2.0);
+            
+            if (bValue[f][i]!=0.0){
+            this->_x[c1][i]= bValue[f][i]* sqrt(distance/2.0/3.1415926535)*(3.0-4.0*0.33-cos(theta))*sin(theta/2.0);
+            }
+        }
+    
+        const VectorT3 en = this->_faceArea[f]/this->_faceAreaMag[f];
+        const T_Scalar xC0_dotn = dot(this->_x[c0]-surfingbValue,en);
+        const X xB = this->_x[c0] - 2.*xC0_dotn * en;
+
+        Diag dxBdxC0(Diag::getZero());
+        dxBdxC0(0,0) =  1.0 - 2.*en[0]*en[0];
+        dxBdxC0(0,1) =  - 2.*en[0]*en[1];
+        dxBdxC0(0,2) =  - 2.*en[0]*en[2];
+
+        dxBdxC0(1,0) =  - 2.*en[1]*en[0];
+        dxBdxC0(1,1) =  1.0 - 2.*en[1]*en[1];
+        dxBdxC0(1,2) =  - 2.*en[1]*en[2];
+
+        dxBdxC0(2,0) =  - 2.*en[2]*en[0];
+        dxBdxC0(2,1) =  - 2.*en[2]*en[1];
+        dxBdxC0(2,2) =  1.0 - 2.*en[2]*en[2];
+        
+        
+        const X xc1mxB = xB-this->_x[c1];
+        
+        // boundary value equation
+        // set all neighbour coeffs to zero first and ap to  -1
+        this->_dRdX.setDirichlet(c1);
+
+        // dependance on c0
+        this->_assembler.getCoeff10(f) = dxBdxC0;
+        this->_r[c1] = xc1mxB;
+        
+        for (int i=0; i<3; i++){
+            if (bValue[f][i]!=0.0){
+            this->_r[c1][i]=0.0;
+            }
+        }
 
     }
   }
@@ -1132,6 +1268,21 @@ public:
                 gbc.applySurfingFixedXBC(surfingParameters, bDeformation);
                 allNeumann = false;
 	    }
+            else if (bc.bcType == "Surfing2X")
+            {
+	        FloatValEvaluator<VectorT3>
+		  bDeformation(bc.getVal("specifiedXDeformation"),
+			       bc.getVal("specifiedYDeformation"),
+			       bc.getVal("specifiedZDeformation"),
+			       faces);
+			FloatValEvaluator<VectorT3>
+		  surfingParameters(bc.getVal("specifiedlSurfingCrackTipX"),
+		  				bc.getVal("specifiedlSurfingCrackTipY"),
+		  				bc.getVal("specifiedlSurfingLoadNum"),
+		  				faces);
+                gbc.applySurfing2XBC(surfingParameters, bDeformation);
+                allNeumann = false;
+	    }
             else if (bc.bcType == "Surfing2FixedX")
             {
 	        FloatValEvaluator<VectorT3>
@@ -1145,6 +1296,46 @@ public:
 		  				bc.getVal("specifiedlSurfingLoadNum"),
 		  				faces);
                 gbc.applySurfing2FixedXBC(surfingParameters, bDeformation);
+                allNeumann = false;
+	    }
+            else if (bc.bcType == "Surfing3PlaneStrain")
+            {
+	        FloatValEvaluator<VectorT3>
+		  bDeformation(bc.getVal("specifiedXDeformation"),
+			       bc.getVal("specifiedYDeformation"),
+			       bc.getVal("specifiedZDeformation"),
+			       faces);
+			FloatValEvaluator<VectorT3>
+		  surfingParameters1(bc.getVal("specifiedlSurfingCrackTipX"),
+		  				bc.getVal("specifiedlSurfingCrackTipY"),
+		  				bc.getVal("specifiedlSurfingLoadNum"),
+		  				faces);
+			FloatValEvaluator<VectorT3>
+		  surfingParameters2(bc.getVal("specifiedlSurfingLoadSpeed"),
+		  				bc.getVal("specifiedlSurfingNu"),
+		  				bc.getVal("specifiedlSurfingLoadNum"),
+		  				faces);
+                gbc.applySurfing3PlaneStrainBC(surfingParameters1, surfingParameters2, bDeformation);
+                allNeumann = false;
+	    }
+            else if (bc.bcType == "Surfing3PlaneStress")
+            {
+	        FloatValEvaluator<VectorT3>
+		  bDeformation(bc.getVal("specifiedXDeformation"),
+			       bc.getVal("specifiedYDeformation"),
+			       bc.getVal("specifiedZDeformation"),
+			       faces);
+			FloatValEvaluator<VectorT3>
+		  surfingParameters1(bc.getVal("specifiedlSurfingCrackTipX"),
+		  				bc.getVal("specifiedlSurfingCrackTipY"),
+		  				bc.getVal("specifiedlSurfingLoadNum"),
+		  				faces);
+			FloatValEvaluator<VectorT3>
+		  surfingParameters2(bc.getVal("specifiedlSurfingLoadSpeed"),
+		  				bc.getVal("specifiedlSurfingNu"),
+		  				bc.getVal("specifiedlSurfingLoadNum"),
+		  				faces);
+                gbc.applySurfing3PlaneStressBC(surfingParameters1, surfingParameters2, bDeformation);
                 allNeumann = false;
 	    }
             else if (bc.bcType == "Interface")

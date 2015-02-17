@@ -204,7 +204,7 @@ BoundaryPositionLeft = 1e-5
 BoundaryPositionBottom = 1e-5
 
 # Set Parameters
-numSteps = 1			       # Number of Steps
+numSteps = 10			       # Number of Steps
 timeStep = 3600                # Size of timestep (seconds)
 numtimeSteps = 1               # Number of timesteps in global combined solution
 numStructIterations = 20       # Number of iterations for structure model, automatically set to 1 when StructIterFlag == 0
@@ -219,15 +219,21 @@ Lamda = nu*E/(1+nu)/(1-2.0*nu) # Lamda
 Ac =0                          # Creep coefficient 1/hr
 cFED = 1                    # critical fracture energy density, J/m^2
 cLoC=  1e-5                    # model parameter controlling the width of the smooth approximation of the crack, m
-Diff = 4.0*cLoC*cLoC           # fracture Conductivity Coefficient
 crackPF = 1e-3			       # Phase Field Value at Crack
 NumofFiber = 0
+Cv=8.0/3.0
+PFModelFlag = 1       #0: second order 1: first order with cap 2: first order without cap
+
+if PFModelFlag == 0:
+    Diff = 4.0*cLoC*cLoC
+else :
+    Diff = 2.0*cLoC*cLoC
 
 DeformUnit = (cFED*BoundaryPositionTop/Lamda)**0.5  #Normalized Displacement Unit
 #DispStep = 0.02*DeformUnit	   # Displacement Step
 DispStep = 1e-6
 StressStep = 1e6
-LoadCoef = -0.5
+LoadCoef = -0.0
 
 OInterval_s = 1                 #Output interval for equilibrium status
 OInterval_l = 50
@@ -337,22 +343,23 @@ StructurebcMap = smodel.getBCMap()
 for id in [beamRight]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        #bc.bcType = 'Symmetry'
-        bc.bcType = 'SpecifiedTraction'
-        bc['specifiedXXTraction'] = 0
-        bc['specifiedYXTraction'] = 0
-        bc['specifiedZXTraction'] = 0
+        bc.bcType = 'Symmetry'
+        #bc.bcType = 'SpecifiedTraction'
+        #bc['specifiedXXTraction'] = 0
+        #bc['specifiedYXTraction'] = 0
+        #bc['specifiedZXTraction'] = 0
 for id in [beamTop]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
         #bc.bcType = 'SpecifiedDeformation'
-        #bc['specifiedXDeformation'] = 0
-        #bc['specifiedYDeformation'] = 0
-        #bc['specifiedZDeformation'] = 0
-        bc.bcType = 'SpecifiedTraction'
-        bc['specifiedXYTraction'] = 0
-        bc['specifiedYYTraction'] = 0
-        bc['specifiedZYTraction'] = 0
+        bc.bcType = 'SymmetryModified'
+        bc['specifiedXDeformation'] = 0
+        bc['specifiedYDeformation'] = 0
+        bc['specifiedZDeformation'] = 0
+        #bc.bcType = 'SpecifiedTraction'
+        #bc['specifiedXYTraction'] = 0
+        #bc['specifiedYYTraction'] = 0
+        #bc['specifiedZYTraction'] = 0
 for id in [beamBot]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
@@ -508,6 +515,8 @@ G_local = []
 
 strain_trace = []
 ElasticEnergyField = []
+fractureToughnessField = []
+Strain_ZZ = []
 
 compress_found_flag  = array([0.0])
 struct_outer_tol_flag = array([0.0])
@@ -587,6 +596,8 @@ for n in range(0,nmesh):
         strain_trace.append(0)
         ElasticEnergyField.append(0)
         EnergyHistoryField.append(0)
+        
+        Strain_ZZ.append(0)
 
         E_local.append(E)
         nu_local.append(nu)
@@ -596,6 +607,7 @@ for n in range(0,nmesh):
         )
         Lamda_local.append(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
         G_local.append(E_local[i]/(2.*(1+nu_local[i])))
+        fractureToughnessField.append(cFED)
 
         for fiber_count in range(0,NumofFiber) :
             if((coordA[i,0]-fiber_x[fiber_count])**2+\
@@ -624,16 +636,16 @@ for nstep in range(0,numSteps):
    for id in [beamTop]:
        if id in StructurebcMap:
            bc = StructurebcMap[id]
-           bc['specifiedYYTraction'] = LoadCoef*ExternalStress
-           #bc['specifiedYDeformation'] = Displacement
+           #bc['specifiedYYTraction'] = LoadCoef*ExternalStress
+           bc['specifiedYDeformation'] = Displacement
    #for id in [beamFront]:
    #    if id in StructurebcMap:
    #        bc = StructurebcMap[id]
    #        bc['specifiedZZTraction'] = ExternalStress
-   for id in [beamRight]:
-       if id in StructurebcMap:
-           bc = StructurebcMap[id]
-           bc['specifiedXXTraction'] = ExternalStress
+   #for id in [beamRight]:
+   #    if id in StructurebcMap:
+   #        bc = StructurebcMap[id]
+   #        bc['specifiedXXTraction'] = ExternalStress
    #for id in [beamBot]:
    #    if id in StructurebcMap:
    #        bc = StructurebcMap[id]
@@ -870,6 +882,8 @@ for nstep in range(0,numSteps):
        
        Total_Elastic_Energy = array([0.0])
        Total_Compression_Elastic_Energy = array([0.0])
+       Total_Volume = array([0.0])
+       Average_Strain_ZZ = array([0.0])
        Max_Vol_Stress = array([-1e20])
        Max_Vol_Stress_X = array([0.0])
        Max_Vol_Stress_Y = array([0.0])
@@ -948,7 +962,9 @@ for nstep in range(0,numSteps):
                Total_Elastic_Energy[0] = Total_Elastic_Energy[0] + ((PhaseFieldA[i]**2.0+StiffnessResidual)*(K_local[i]/2.0*strain_trace_positive**2+G_local[i]*strain_dev2_trace)+K_local[i]/2.0*strain_trace_negative**2)*volumeA[i]
            
            Total_Compression_Elastic_Energy[0] = Total_Compression_Elastic_Energy[0] + K_local[i]/2.0*strain_trace_negative**2
-           
+           Total_Volume[0] += volumeA[i]
+           Strain_ZZ[i] = - Lamda * ( strainXFieldsA[i][0]+strainYFieldsA[i][1])/(Lamda+2.0*G)
+           Average_Strain_ZZ[0] += Strain_ZZ[i]*volumeA[i] 
            if coordA[i,0]>0.0*BoundaryPositionRight and coordA[i,0]<1.0*BoundaryPositionRight\
            and coordA[i,1]>0.0*BoundaryPositionTop and coordA[i,1]<1.0*BoundaryPositionTop and i < selfCount:
                if (tractXFieldsA[i][0]+tractYFieldsA[i][1]+tractZFieldsA[i][2])/3.0>Max_Vol_Stress[0]:
@@ -1048,14 +1064,29 @@ for nstep in range(0,numSteps):
        DispRight[0]=DispRight[0]/Disp_count_right[0]
        DispBottom[0]=DispBottom[0]/Disp_count_bottom[0]
        DispLeft[0]=DispLeft[0]/Disp_count_left[0]
+       Average_Strain_ZZ[0]=Average_Strain_ZZ[0]/Total_Volume[0]
        #End of gathering loading and elastic energy info
        if rank_id == 0:
            print  "Loading Force: ",LoadingTop[0],LoadingRight[0],LoadingLeft[0],LoadingBottom[0]
            print  "Displacement: ",DispTop[0],DispRight[0],DispLeft[0],DispBottom[0]
+           print  "Average Strain_ZZ",Average_Strain_ZZ[0]
    
        #Update SourceCoef for Fracture Model   
        for i in range(0,Count):  
-           sourceCoefFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/cFED+1.0)                 
+           if PFModelFlag == 0:
+               sourceCoefFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]+1.0)  
+           if PFModelFlag == 1:
+               if 2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]< 1.0:
+                   sourceCoefFieldA[i]=-(1.0)
+               else:
+                   sourceCoefFieldA[i]=-(2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i])    
+                   print "Source coef: ",  coordA[i,0], coordA[i,1], sourceCoefFieldA[i]  
+           if PFModelFlag == 2:
+               if 2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]< 0.9:
+                   sourceCoefFieldA[i]=-(0.9)
+               else:
+                   sourceCoefFieldA[i]=-(2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i])    
+               print "Source coef: ",  coordA[i,0], coordA[i,1], sourceCoefFieldA[i]         
  ########################################################################################## 
 # Start of the fracture model
  ########################################################################################## 
@@ -1072,7 +1103,18 @@ for nstep in range(0,numSteps):
                            PhaseFieldA[i]=pfperfectFieldsA[i]
                        if PhaseFieldA[i]>PFHistoryField[i]:
                            PhaseFieldA[i]=PFHistoryField[i]
-                       sourceFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/cFED+1.0)*PhaseFieldA[i]
+                       if PFModelFlag == 0:
+                           sourceFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]+1.0)*PhaseFieldA[i]
+                       if PFModelFlag == 1:
+                           if 2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]< 1.0:
+                               sourceFieldA[i]=-(1.0)*PhaseFieldA[i]
+                           else:
+                               sourceFieldA[i]=-(2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i])*PhaseFieldA[i]
+                       if PFModelFlag == 2:
+                           if 2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]< 0.9:
+                               sourceFieldA[i]=-(0.9)*PhaseFieldA[i]
+                           else:
+                               sourceFieldA[i]=-(2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i])*PhaseFieldA[i]
                tmodel.advance(1)
                
            for i in range(0,Count):
@@ -1084,7 +1126,18 @@ for nstep in range(0,numSteps):
                    
            for n in range(0,nmesh):
                for i in range(0,Count):
-                   sourceFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/cFED+1.0)*PhaseFieldA[i]
+                   if PFModelFlag == 0:
+                       sourceFieldA[i]=-(4.0*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]+1.0)*PhaseFieldA[i]
+                   if PFModelFlag == 1:
+                       if 2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]< 1.0:
+                           sourceFieldA[i]=-(1.0)*PhaseFieldA[i]
+                       else:
+                           sourceFieldA[i]=-(2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i])*PhaseFieldA[i]
+                   if PFModelFlag == 2:
+                       if 2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]< 0.9:
+                           sourceFieldA[i]=-(0.9)*PhaseFieldA[i]
+                       else:
+                           sourceFieldA[i]=-(2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i])*PhaseFieldA[i]
            tmodel.advance(1)
            
            fract_inner_flag[0] = 0
