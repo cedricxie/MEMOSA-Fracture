@@ -264,7 +264,7 @@ public:
         faceAlpha = alphaCell[c0]*wt0 + alphaCell[c1]*wt1;
         faceTemperature = temperatureCell[c0]*wt0 + temperatureCell[c1]*wt1;
         
-        faceEigenvalue11[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][0]*eigenvector1Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][0]*eigenvector1Cell[c1][0]*wt1;
+        /*faceEigenvalue11[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][0]*eigenvector1Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][0]*eigenvector1Cell[c1][0]*wt1;
         faceEigenvalue11[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][0]*eigenvector2Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][0]*eigenvector2Cell[c1][0]*wt1;
         faceEigenvalue11[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][0]*eigenvector3Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][0]*eigenvector3Cell[c1][0]*wt1;
 
@@ -299,7 +299,7 @@ public:
         faceEigenvalue33[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][2]*eigenvector3Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][2]*eigenvector1Cell[c1][2]*wt1;
         faceEigenvalue33[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][2]*eigenvector3Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][2]*eigenvector2Cell[c1][2]*wt1;
         faceEigenvalue33[2]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][2]*eigenvector3Cell[c0][2]*eigenvector3Cell[c0][2]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][2]*eigenvector3Cell[c1][2]*eigenvector3Cell[c1][2]*wt1;
-        
+        */
 	const VGradType gradF = (vGradCell[c0]*wt0 + vGradCell[c1]*wt1);
 
 	VectorT3 source(NumTypeTraits<VectorT3>::getZero());
@@ -320,7 +320,7 @@ public:
 	source[2] = faceMu*(gradF[2][0]*Af[0] + gradF[2][1]*Af[1] + gradF[2][2]*Af[2])
           + faceLambda*divU*Af[2];
     
-    source[0] -= faceMuOld*(faceEigenvalue11[0]*Af[0] +faceEigenvalue11[1]*Af[0] + faceEigenvalue11[2]*Af[0]);
+    /*source[0] -= faceMuOld*(faceEigenvalue11[0]*Af[0] +faceEigenvalue11[1]*Af[0] + faceEigenvalue11[2]*Af[0]);
     source[1] -= faceMuOld*(faceEigenvalue12[0]*Af[0] +faceEigenvalue12[1]*Af[0] + faceEigenvalue12[2]*Af[0]);
     source[2] -= faceMuOld*(faceEigenvalue13[0]*Af[0] +faceEigenvalue13[1]*Af[0] + faceEigenvalue13[2]*Af[0]);
 
@@ -331,7 +331,7 @@ public:
     source[0] -= faceMuOld*(faceEigenvalue31[0]*Af[2] +faceEigenvalue31[1]*Af[2] + faceEigenvalue31[2]*Af[2]);
     source[1] -= faceMuOld*(faceEigenvalue32[0]*Af[2] +faceEigenvalue32[1]*Af[2] + faceEigenvalue32[2]*Af[2]);
     source[2] -= faceMuOld*(faceEigenvalue33[0]*Af[2] +faceEigenvalue33[1]*Af[2] + faceEigenvalue33[2]*Af[2]);
-    
+    */
     //printf("source term: %lf, %lf, %lf\n",source[0],source[1],source[2]);
     
     //Source terms corresponding to the explicit Lambda term

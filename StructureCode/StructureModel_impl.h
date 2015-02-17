@@ -1879,29 +1879,29 @@ public:
 	    for(int j=0;j<3;j++)
 	      wgPlusTranspose[i][j] += wg[j][i];
 	  
-	  tractionX[n][0] = wgPlusTranspose[0][0]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]
-	                    -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][0]);
+	  tractionX[n][0] = wgPlusTranspose[0][0]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n];
+	  //                  -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][0]);
       //printf("ExtraPart in TractionXX:%lf,TractionXX Old: %lf,%lf, Sum: %lf\n",2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][0]),wgPlusTranspose[0][0]*eta[n],(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n], tractionX[n][0]);
 
-	  tractionX[n][1] = wgPlusTranspose[0][1]*eta[n]
-	                    -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][1]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][1]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][1]*eigenvector3[n][0]);
-	  tractionX[n][2] = wgPlusTranspose[0][2]*eta[n]
-	                    -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][2]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][2]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][2]*eigenvector3[n][0]);
+	  tractionX[n][1] = wgPlusTranspose[0][1]*eta[n];
+	  //                  -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][1]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][1]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][1]*eigenvector3[n][0]);
+	  tractionX[n][2] = wgPlusTranspose[0][2]*eta[n];
+	  //                  -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][2]*eigenvector1[n][0] + eigenvalue[n][1]*eigenvector2[n][2]*eigenvector2[n][0] + eigenvalue[n][2]*eigenvector3[n][2]*eigenvector3[n][0]);
 
-      tractionY[n][0] = wgPlusTranspose[1][0]*eta[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][1] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][1] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][1]);
-      tractionY[n][1] = wgPlusTranspose[1][1]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][1]*eigenvector1[n][1] + eigenvalue[n][1]*eigenvector2[n][1]*eigenvector2[n][1] + eigenvalue[n][2]*eigenvector3[n][1]*eigenvector3[n][1]);
+      tractionY[n][0] = wgPlusTranspose[1][0]*eta[n];
+      //                  -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][1] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][1] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][1]);
+      tractionY[n][1] = wgPlusTranspose[1][1]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n];
+      //                  -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][1]*eigenvector1[n][1] + eigenvalue[n][1]*eigenvector2[n][1]*eigenvector2[n][1] + eigenvalue[n][2]*eigenvector3[n][1]*eigenvector3[n][1]);
       //printf("ExtraPart in TractionYY:%lf, tractionYY Old: %lf,%lf, Sum: %lf\n",2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][1]*eigenvector1[n][1] + eigenvalue[n][1]*eigenvector2[n][1]*eigenvector2[n][1] + eigenvalue[n][2]*eigenvector3[n][1]*eigenvector3[n][1]),wgPlusTranspose[1][1]*eta[n],(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n],tractionY[n][1]);
 
-      tractionY[n][2] = wgPlusTranspose[1][2]*eta[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][2]*eigenvector1[n][1] + eigenvalue[n][1]*eigenvector2[n][2]*eigenvector2[n][1] + eigenvalue[n][2]*eigenvector3[n][2]*eigenvector3[n][1]);
-      tractionZ[n][0] = wgPlusTranspose[2][0]*eta[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][2] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][2] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][2]);
-      tractionZ[n][1] = wgPlusTranspose[2][1]*eta[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][1]*eigenvector1[n][2] + eigenvalue[n][1]*eigenvector2[n][1]*eigenvector2[n][2] + eigenvalue[n][2]*eigenvector3[n][1]*eigenvector3[n][2]);
-      tractionZ[n][2] = wgPlusTranspose[2][2]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n]
-                        -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][2]*eigenvector1[n][2] + eigenvalue[n][1]*eigenvector2[n][2]*eigenvector2[n][2] + eigenvalue[n][2]*eigenvector3[n][2]*eigenvector3[n][2]);	  
+      tractionY[n][2] = wgPlusTranspose[1][2]*eta[n];
+      //                  -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][2]*eigenvector1[n][1] + eigenvalue[n][1]*eigenvector2[n][2]*eigenvector2[n][1] + eigenvalue[n][2]*eigenvector3[n][2]*eigenvector3[n][1]);
+      tractionZ[n][0] = wgPlusTranspose[2][0]*eta[n];
+      //                  -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][0]*eigenvector1[n][2] + eigenvalue[n][1]*eigenvector2[n][0]*eigenvector2[n][2] + eigenvalue[n][2]*eigenvector3[n][0]*eigenvector3[n][2]);
+      tractionZ[n][1] = wgPlusTranspose[2][1]*eta[n];
+      //                  -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][1]*eigenvector1[n][2] + eigenvalue[n][1]*eigenvector2[n][1]*eigenvector2[n][2] + eigenvalue[n][2]*eigenvector3[n][1]*eigenvector3[n][2]);
+      tractionZ[n][2] = wgPlusTranspose[2][2]*eta[n]+(wg[0][0]+wg[1][1]+wg[2][2])*eta1[n];
+      //                  -2.0*etaold[n]*(1-pfv[n]*pfv[n])*(eigenvalue[n][0]*eigenvector1[n][2]*eigenvector1[n][2] + eigenvalue[n][1]*eigenvector2[n][2]*eigenvector2[n][2] + eigenvalue[n][2]*eigenvector3[n][2]*eigenvector3[n][2]);	  
       
       //Stress terms corresponding to the source terms due to explicit Lambda terms
       /*if ((wg[0][0]+wg[1][1]+wg[2][2])>0){
