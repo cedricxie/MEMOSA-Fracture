@@ -219,12 +219,14 @@ cLoC=  1e-5                    # model parameter controlling the width of the sm
 Diff = 4.0*cLoC*cLoC           # fracture Conductivity Coefficient
 crackPF = 1e-3			       # Phase Field Value at Crack
 NumofFiber = 0
+alpha = 70e-6
 
 DeformUnit = (cFED*BoundaryPositionTop/Lamda)**0.5  #Normalized Displacement Unit
 #DispStep = 0.02*DeformUnit	   # Displacement Step
 DispStep = 1e-6
 StressStep = -1e6
 LoadCoef = -0.5
+TempStep = 10
 
 OInterval_s = 1                 #Output interval for equilibrium status
 OInterval_l = 50
@@ -380,11 +382,11 @@ for id in [beamBack]:
 for id in [beamFront]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        bc.bcType = 'Symmetry'
-        #bc.bcType = 'SpecifiedTraction'
-        #bc['specifiedXZTraction'] = 0
-        #bc['specifiedYZTraction'] = 0
-        #bc['specifiedZZTraction'] = 0
+        #bc.bcType = 'Symmetry'
+        bc.bcType = 'SpecifiedTraction'
+        bc['specifiedXZTraction'] = 0
+        bc['specifiedYZTraction'] = 0
+        bc['specifiedZZTraction'] = 0
 
 
 vcMap = smodel.getVCMap()
@@ -395,6 +397,7 @@ for i,vc in vcMap.iteritems():
     vc['etaold'] = E/(2.*(1+nu))
     vc['eta1old'] = nu*E/((1+nu)*(1-2.0*nu))
     vc['pfv'] = 1.0
+    vc['alpha'] = alpha
 ##########################################################################################
 #End of the boundary conditions set up
 ##########################################################################################
@@ -449,6 +452,7 @@ smodel.init()
 #Set back to False
 soptions.transient = False
 soptions.creep = False
+soptions.thermo = True
 ##########################################################################################
 # Model Initialization
 ##########################################################################################
@@ -540,6 +544,10 @@ for n in range(0,nmesh):
     eta1FieldsA = eta1Fields.asNumPyArray()
     eta1oldFields = structureFields.eta1old[cellSitesLocal[n]]
     eta1oldFieldsA = eta1oldFields.asNumPyArray()
+
+    temperatureFields = structureFields.temperature[cellSitesLocal[n]]
+    temperatureFieldsA = temperatureFields.asNumPyArray()
+
     for i in range(0,Count):
 ################Pre-defined crack#####################
         PFHistoryField.append(1.0)
@@ -619,23 +627,30 @@ for nstep in range(0,numSteps):
    if rank_id==0:
        print "----------Starting step: ",nstep, "Displacement: ",Displacement
 
-   for id in [beamTop]:
-       if id in StructurebcMap:
-           bc = StructurebcMap[id]
-           bc['specifiedYYTraction'] = LoadCoef*ExternalStress
+   #for id in [beamTop]:
+   #    if id in StructurebcMap:
+   #        bc = StructurebcMap[id]
+   #        bc['specifiedYYTraction'] = LoadCoef*ExternalStress
            #bc['specifiedYDeformation'] = Displacement
    #for id in [beamFront]:
    #    if id in StructurebcMap:
    #        bc = StructurebcMap[id]
    #        bc['specifiedZZTraction'] = ExternalStress
-   for id in [beamRight]:
-       if id in StructurebcMap:
-           bc = StructurebcMap[id]
-           bc['specifiedXXTraction'] = ExternalStress
+   #for id in [beamRight]:
+   #    if id in StructurebcMap:
+   #        bc = StructurebcMap[id]
+   #        bc['specifiedXXTraction'] = ExternalStress
    #for id in [beamBot]:
    #    if id in StructurebcMap:
    #        bc = StructurebcMap[id]
    #        bc['specifiedYYTraction'] =ExternalStress
+   
+   for i in range(0,Count):
+       #if i == 0:
+       #    print "Previous Temperature", temperatureFieldsA[i]
+       temperatureFieldsA[i] = temperatureFieldsA[i] + TempStep
+       #if i == 0:
+       #    print "Current Temperature", temperatureFieldsA[i]       
 ##########################################################################################
 # Start of Middle Loop Iteration
 ##########################################################################################           
