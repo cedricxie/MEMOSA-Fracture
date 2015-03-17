@@ -216,13 +216,20 @@ nu_fiber=0.28                  # Fiber Poisson's ratio
 G = E/2.0/(1+nu)               # Shear Modulus
 K = E/3.0/(1-2.0*nu)
 Lamda = nu*E/(1+nu)/(1-2.0*nu) # Lamda
+
+C11 = 2.0e9
+C12 = 1.0e9
+C13 = 1.5e9
+C33 = 9.0e9
+C44 = 3.0e9
+
 Ac =0                          # Creep coefficient 1/hr
 cFED = 1                    # critical fracture energy density, J/m^2
 cLoC=  1e-5                    # model parameter controlling the width of the smooth approximation of the crack, m
 crackPF = 1e-3			       # Phase Field Value at Crack
 NumofFiber = 0
 Cv=8.0/3.0
-PFModelFlag = 1       #0: second order 1: first order with cap 2: first order without cap
+PFModelFlag = 0       #0: second order 1: first order with cap 2: first order without cap
 
 if PFModelFlag == 0:
     Diff = 4.0*cLoC*cLoC
@@ -231,7 +238,7 @@ else :
 
 DeformUnit = (cFED*BoundaryPositionTop/Lamda)**0.5  #Normalized Displacement Unit
 #DispStep = 0.02*DeformUnit	   # Displacement Step
-DispStep = 1e-6
+DispStep = 1e-8
 StressStep = 1e6
 LoadCoef = -0.0
 
@@ -344,6 +351,10 @@ for id in [beamRight]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
         bc.bcType = 'Symmetry'
+        #bc.bcType = 'SymmetryModified'
+        #bc['specifiedXDeformation'] = 0
+        #bc['specifiedYDeformation'] = 0
+        #bc['specifiedZDeformation'] = 0
         #bc.bcType = 'SpecifiedTraction'
         #bc['specifiedXXTraction'] = 0
         #bc['specifiedYXTraction'] = 0
@@ -351,11 +362,12 @@ for id in [beamRight]:
 for id in [beamTop]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
+        bc.bcType = 'Symmetry'
         #bc.bcType = 'SpecifiedDeformation'
-        bc.bcType = 'SymmetryModified'
-        bc['specifiedXDeformation'] = 0
-        bc['specifiedYDeformation'] = 0
-        bc['specifiedZDeformation'] = 0
+        #bc.bcType = 'SymmetryModified'
+        #bc['specifiedXDeformation'] = 0
+        #bc['specifiedYDeformation'] = 0
+        #bc['specifiedZDeformation'] = 0
         #bc.bcType = 'SpecifiedTraction'
         #bc['specifiedXYTraction'] = 0
         #bc['specifiedYYTraction'] = 0
@@ -391,7 +403,11 @@ for id in [beamBack]:
 for id in [beamFront]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        bc.bcType = 'Symmetry'
+        #bc.bcType = 'Symmetry'
+        bc.bcType = 'SymmetryModified'
+        bc['specifiedXDeformation'] = 0
+        bc['specifiedYDeformation'] = 0
+        bc['specifiedZDeformation'] = 0
         #bc.bcType = 'SpecifiedTraction'
         #bc['specifiedXZTraction'] = 0
         #bc['specifiedYZTraction'] = 0
@@ -401,10 +417,17 @@ for id in [beamFront]:
 vcMap = smodel.getVCMap()
 for i,vc in vcMap.iteritems():
     vc['density'] = 8912
-    vc['eta'] = E/(2.*(1+nu))
-    vc['eta1'] = nu*E/((1+nu)*(1-2.0*nu))
-    vc['etaold'] = E/(2.*(1+nu))
-    vc['eta1old'] = nu*E/((1+nu)*(1-2.0*nu))
+    vc['eta'] = (C11 - C12)/2.0
+    vc['eta1'] = C12
+    vc['etaold'] = (C11 - C12)/2.0
+    vc['eta1old'] = C12
+    
+    vc['C11'] = C11
+    vc['C12'] = C12
+    vc['C13'] = C13
+    vc['C33'] = C33
+    vc['C44'] = C44
+    
     vc['pfv'] = 1.0
     vc['structcoef1'] = 1.0
     vc['structcoef2'] = 1.0
@@ -525,6 +548,12 @@ struct_inner_flag = array([0.0])
 fract_inner_flag = array([0.0])
 mid_loop_flag = array([0.0])
 PF_min = array([1.0])
+PF_min_X = array([0.0])
+PF_min_Y = array([0.0])
+Vol_Stress_at_PF_min = array([-1e20])
+Dev_Stress_at_PF_min = array([0.0])
+Vol_Strain_at_PF_min = array([-1e20])
+Dev_Strain_at_PF_min = array([0.0])
 PF_change_max= array([0.0])
 PF_change_max_inner= array([0.0])
 deformation_change_max = array([0.0])
@@ -554,6 +583,18 @@ for n in range(0,nmesh):
     eta1FieldsA = eta1Fields.asNumPyArray()
     eta1oldFields = structureFields.eta1old[cellSitesLocal[n]]
     eta1oldFieldsA = eta1oldFields.asNumPyArray()
+    
+    C11Fields = structureFields.C11[cellSitesLocal[n]]
+    C11FieldsA = C11Fields.asNumPyArray() 
+    C12Fields = structureFields.C12[cellSitesLocal[n]]
+    C12FieldsA = C12Fields.asNumPyArray() 
+    C13Fields = structureFields.C13[cellSitesLocal[n]]
+    C13FieldsA = C13Fields.asNumPyArray() 
+    C33Fields = structureFields.C33[cellSitesLocal[n]]
+    C33FieldsA = C33Fields.asNumPyArray() 
+    C44Fields = structureFields.C44[cellSitesLocal[n]]
+    C44FieldsA = C44Fields.asNumPyArray() 
+    
     pfperfectFields = structureFields.pfperfect[cellSitesLocal[n]]
     pfperfectFieldsA = pfperfectFields.asNumPyArray()
     pfvFields = structureFields.pfv[cellSitesLocal[n]]
@@ -615,7 +656,10 @@ for n in range(0,nmesh):
                 E_local[i]=E_fiber
                 nu_local[i]=nu_fiber
                 fractureToughnessField[i]=cFED*100.0
-
+if rank_id == 0:
+   print "Ending model initialization"
+   t1 = time.time()
+   print "TIME ELAPSE: ",t1-t0
 ##########################################################################################
 # End of Model Initialization
 ##########################################################################################
@@ -633,18 +677,20 @@ for nstep in range(0,numSteps):
    if rank_id==0:
        print "----------Starting step: ",nstep, "Displacement: ",Displacement
 
-   for id in [beamTop]:
-       if id in StructurebcMap:
-           bc = StructurebcMap[id]
-           #bc['specifiedYYTraction'] = LoadCoef*ExternalStress
-           bc['specifiedYDeformation'] = Displacement
-   #for id in [beamFront]:
+   #for id in [beamTop]:
    #    if id in StructurebcMap:
    #        bc = StructurebcMap[id]
+   #        #bc['specifiedYYTraction'] = LoadCoef*ExternalStress
+   #        bc['specifiedYDeformation'] = Displacement
+   for id in [beamFront]:
+       if id in StructurebcMap:
+           bc = StructurebcMap[id]
+           bc['specifiedZDeformation'] = Displacement
    #        bc['specifiedZZTraction'] = ExternalStress
    #for id in [beamRight]:
    #    if id in StructurebcMap:
    #        bc = StructurebcMap[id]
+   #        bc['specifiedXDeformation'] = Displacement
    #        bc['specifiedXXTraction'] = ExternalStress
    #for id in [beamBot]:
    #    if id in StructurebcMap:
@@ -722,10 +768,10 @@ for nstep in range(0,numSteps):
                if rank_id==0:
                    if struct_inner_flag[0] == 1 :
                        print "Structure inner loop keeps iterating ",deformation_change_max[0],deformation_change_max[0]/DeformUnit,StructTolerance,\
-                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1]
+                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],"\n"
                    if struct_inner_flag[0] == 0 :
                        print "Structure inner loop finished ",deformation_change_max[0],deformation_change_max[0]/DeformUnit,StructTolerance,\
-                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],
+                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],"\n"
 ##########################################################################################
 # End of Structure Inner Loop Iteration
 ##########################################################################################    
@@ -787,47 +833,7 @@ for nstep in range(0,numSteps):
                        eigenvector1FieldsA[i][j]=strainXFieldsA[i][j]
                        eigenvector2FieldsA[i][j]=strainYFieldsA[i][j]
                        eigenvector3FieldsA[i][j]=strainZFieldsA[i][j]
-                   
-                   if strain_trace[i] >= 0 and SymFlag==2:
-                       if V_flag[i] == 1 :
-                           #if strain_trace[i] < 1e-1 :
-                           #    print "================Tolerated Cell in Tension Found================",\
-                           #    rank_id,i,strain_trace[i],PhaseFieldA[i]
-                           #else :
-                           if strain_trace[i] > trace_change_threshold :
-                               repeat_array[i]=repeat_array[i]+1
-                               if repeat_array[i] < 20 :
-                                   print "================Mis Predict Cell in Tension Found================",\
-                                   rank_id,i,strain_trace[i],PhaseFieldA[i]," Count : ",repeat_array[i]," X: ",coordA[i][0]," Y: ",coordA[i][1]
-                                   compress_found_flag[0] = 1
-                                   eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)        
-                                   V_flag[i]=0
-                               else :
-                                   print "================Ignored Cell in Tension Found================",\
-                                   rank_id,i,strain_trace[i],PhaseFieldA[i]," Count : ",repeat_array[i]
-                   elif SymFlag==2 :
-                       if V_flag[i]==0:
-                           #if strain_trace[i] > -1e-3 :
-                           #    print "================Tolerated Cell in Compression Found================",\
-                           #    rank_id,i,strain_trace[i],PhaseFieldA[i]
-                           #else :
-                           if strain_trace[i] < -trace_change_threshold :
-                               repeat_array[i]=repeat_array[i]+1
-                               if repeat_array[i] < 20 :
-                                   print "================Unexpected Cell in Compression Found================",\
-                                   rank_id,i,strain_trace[i],PhaseFieldA[i]," Count : ",repeat_array[i]," X: ",coordA[i][0]," Y: ",coordA[i][1]
-                                   compress_found_flag[0] = 1
-                                   eta1FieldsA[i]=Lamda_local[i]
-                                   #eta1FieldsA[i]=Lamda_local[i]+G_local[i]*2.0/3.0*(1-(PhaseFieldA[i]**2.0+StiffnessResidual))
-                                   V_flag[i]=1 
-                               else :
-                                   print "================Ignored Cell in Compression Found================",\
-                                   rank_id,i,strain_trace[i],PhaseFieldA[i]," Count : ",repeat_array[i]
-               
-               #print "rank: ",rank_id, "Max Deformation: ", deformation_change_max[0]/DeformUnit,deformation_change_max[0],\
-               #"Current Deformation Component: ",deformFieldsA[deformation_change_maxi,0],deformFieldsA[deformation_change_maxi,1],deformFieldsA[deformation_change_maxi,2],\
-               #"Previous Deformation Component",deformation_x_loop[deformation_change_maxi],deformation_y_loop[deformation_change_maxi],deformation_z_loop[deformation_change_maxi],\
-               #"Phase Field: ", PhaseFieldA[deformation_change_maxi],strain_trace[deformation_change_maxi]
+
                if deformation_change_max[0]/DeformUnit<StructOuterTolerance:
                    struct_outer_tol_flag[0]=1
 
@@ -838,26 +844,29 @@ for nstep in range(0,numSteps):
                if struct_outer_iter==1:
                    struct_outer_flag[0]=1
                    if rank_id==0:
-                       print "Doing it one more time"           
+                       print "Doing it one more time","\n"           
                elif compress_found_flag[0]==1 and struct_outer_tol_flag[0] == 0:
                    struct_outer_flag[0]=1
                    if rank_id==0:
-                       print "Skipping fracture model from compress-found",deformation_change_max[0]/DeformUnit,deformation_change_max[0]
+                       print "Skipping fracture model from compress-found",deformation_change_max[0]/DeformUnit,deformation_change_max[0],"\n"
                elif compress_found_flag[0]==0 and struct_outer_tol_flag[0] == 0 and struct_override_count<StructIterUpLimit:
                    struct_outer_flag[0]=1
                    struct_override_count=struct_override_count+1
                    if rank_id==0:
-                       print "Skipping fracture model from tolerance",deformation_change_max[0]/DeformUnit,deformation_change_max[0],struct_override_count
+                       print "Skipping fracture model from tolerance",deformation_change_max[0]/DeformUnit,deformation_change_max[0],struct_override_count,"\n"
                elif compress_found_flag[0]==0 and struct_outer_tol_flag[0] == 0 and struct_override_count>=StructIterUpLimit:
                    if rank_id==0:
-                       print "Getting out of structure model But violating tolerance",deformation_change_max[0]/DeformUnit,deformation_change_max[0],struct_override_count
+                       print "Getting out of structure model But violating tolerance",deformation_change_max[0]/DeformUnit,deformation_change_max[0],struct_override_count,"\n"
                elif compress_found_flag[0]==1 and struct_outer_tol_flag[0] == 1:
                    if rank_id==0:
-                       print "Getting out of structure model But violating compress-found ",deformation_change_max[0]/DeformUnit,deformation_change_max[0]
+                       print "Getting out of structure model But violating compress-found ",deformation_change_max[0]/DeformUnit,deformation_change_max[0],"\n"
                else:
                    if rank_id==0:
                        print "Getting out of structure model ",deformation_change_max[0]/DeformUnit,deformation_change_max[0],\
-                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],PhaseFieldA[deformation_change_maxi]
+                       coordA[deformation_change_maxi][0],coordA[deformation_change_maxi][1],PhaseFieldA[deformation_change_maxi],"\n"
+               if rank_id==0:
+                   t1 = time.time()
+                   print "TIME ELAPSE: ",t1-t0
 ##########################################################################################
 # End of Structure Outer Loop Iteration
 ##########################################################################################                
@@ -935,9 +944,13 @@ for nstep in range(0,numSteps):
 
            if SymFlag==1:
                if strain_trace[i] >0:
-                   ElasticEnergyField[i] = structcoef1FieldsA[i]*K_local[i]/2.0*strain_trace_positive**2+structcoef2FieldsA[i]*G_local[i]*strain_dev2_trace
+                   ElasticEnergyField[i] = 0.5*C11FieldsA[i]*(strainXFieldsA[i][0]**2.0+strainYFieldsA[i][1]**2.0+C33FieldsA[i]/C11FieldsA[i]*strainZFieldsA[i][2]**2.0)\
+                                        + C12FieldsA[i]*(strainXFieldsA[i][0]*strainYFieldsA[i][1]+C13FieldsA[i]/C12FieldsA[i]*strainXFieldsA[i][0]*strainZFieldsA[i][2]+C13FieldsA[i]/C12FieldsA[i]*strainYFieldsA[i][1]*strainZFieldsA[i][2])\
+                                        + C44FieldsA[i]*(strainYFieldsA[i][2]**2.0+strainXFieldsA[i][2]**2.0)+0.5*(C11FieldsA[i]-C12FieldsA[i])*strainXFieldsA[i][1]**2.0
                else: 
-                   ElasticEnergyField[i] = structcoef1FieldsA[i]*K_local[i]/2.0*strain_trace_negative**2+structcoef2FieldsA[i]*G_local[i]*strain_dev2_trace
+                   ElasticEnergyField[i] = 0.5*C11FieldsA[i]*(strainXFieldsA[i][0]**2.0+strainYFieldsA[i][1]**2.0+C33FieldsA[i]/C11FieldsA[i]*strainZFieldsA[i][2]**2.0)\
+                                        + C12FieldsA[i]*(strainXFieldsA[i][0]*strainYFieldsA[i][1]+C13FieldsA[i]/C12FieldsA[i]*strainXFieldsA[i][0]*strainZFieldsA[i][2]+C13FieldsA[i]/C12FieldsA[i]*strainYFieldsA[i][1]*strainZFieldsA[i][2])\
+                                        + C44FieldsA[i]*(strainYFieldsA[i][2]**2.0+strainXFieldsA[i][2]**2.0)+0.5*(C11FieldsA[i]-C12FieldsA[i])*strainXFieldsA[i][1]**2.0
                if i==100:
                    print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
                    print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]
@@ -1080,13 +1093,13 @@ for nstep in range(0,numSteps):
                    sourceCoefFieldA[i]=-(1.0)
                else:
                    sourceCoefFieldA[i]=-(2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i])    
-                   print "Source coef: ",  coordA[i,0], coordA[i,1], sourceCoefFieldA[i]  
+               #print "Source coef: ",  coordA[i,0], coordA[i,1], sourceCoefFieldA[i]  
            if PFModelFlag == 2:
                if 2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i]< 0.9:
                    sourceCoefFieldA[i]=-(0.9)
                else:
                    sourceCoefFieldA[i]=-(2.0*Cv*cLoC*ElasticEnergyField[i]/fractureToughnessField[i])    
-               print "Source coef: ",  coordA[i,0], coordA[i,1], sourceCoefFieldA[i]         
+               #print "Source coef: ",  coordA[i,0], coordA[i,1], sourceCoefFieldA[i]         
  ########################################################################################## 
 # Start of the fracture model
  ########################################################################################## 
@@ -1161,11 +1174,25 @@ for nstep in range(0,numSteps):
  #End of Phase Field Inner Loop
  ##########################################################################################  
        PF_min[0] = 1.0
+       PF_min_i = 0
        PF_change_max[0]=0
        PF_change_maxi=0
+       
+       Local_PF_min=0
+       
        for i in range(0,Count):
            if PhaseFieldA[i]<PF_min[0] and i<selfCount:
                PF_min[0]=PhaseFieldA[i]
+               PF_min_i = i
+               Local_PF_min=PF_min[0]
+               PF_min_X[0] = coordA[i,0]
+               PF_min_Y[0] = coordA[i,1]
+               Vol_Stress_at_PF_min[0] = (tractXFieldsA[i][0]+tractYFieldsA[i][1]+tractZFieldsA[i][2])/3.0
+               Dev_Stress_at_PF_min[0] = (0.5*((tractXFieldsA[i][0]-tractYFieldsA[i][1])**2.0+(tractYFieldsA[i][1]-tractZFieldsA[i][2])**2.0+(tractZFieldsA[i][2]-tractXFieldsA[i][0])**2.0)+\
+                   3.0*(tractXFieldsA[i][1]**2.0+tractXFieldsA[i][2]**2.0+tractYFieldsA[i][2]**2.0))**0.5
+               Vol_Strain_at_PF_min[0] = (strainXFieldsA[i][0]+strainYFieldsA[i][1]+strainZFieldsA[i][2])
+               Dev_Strain_at_PF_min[0] = (0.5*((strainXFieldsA[i][0]-strainYFieldsA[i][1])**2.0+(strainYFieldsA[i][1]-strainZFieldsA[i][2])**2.0+(strainZFieldsA[i][2]-strainXFieldsA[i][0])**2.0)+\
+                   3.0*(strainXFieldsA[i][1]**2.0+strainXFieldsA[i][2]**2.0+strainYFieldsA[i][2]**2.0))**0.5
            if abs(PhaseFieldA[i]-PF_stored[i]) > PF_change_max[0] :
                PF_change_max[0]=abs(PhaseFieldA[i]-PF_stored[i])
                PF_change_maxi=i
@@ -1178,8 +1205,31 @@ for nstep in range(0,numSteps):
        MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[mid_loop_flag, MPI.DOUBLE], op=MPI.MAX)
        MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[PF_change_max, MPI.DOUBLE], op=MPI.MAX)
        
+       if Local_PF_min!=PF_min[0] :
+           PF_min_X[0] = -1e20
+           PF_min_Y[0] = -1e20
+           Vol_Stress_at_PF_min[0] = -1e20
+           Dev_Stress_at_PF_min[0] = -1e20
+           Vol_Strain_at_PF_min[0] = -1e20
+           Dev_Strain_at_PF_min[0] = -1e20
+       else:
+           print "Minimum Phase Field at id: ",rank_id,PhaseFieldA[PF_min_i]
+           print "Strain status @ Minimum Phase Field: ",strainXFieldsA[PF_min_i],strainYFieldsA[PF_min_i],strainZFieldsA[PF_min_i]
+           print "Stress status @ Minimum Phase Field: ",tractXFieldsA[PF_min_i],tractYFieldsA[PF_min_i],tractZFieldsA[PF_min_i]
+           print "Strain eigenvalue status @ Minimum Phase Field: ",eigenvalueFieldsA[PF_min_i]
+           print "Strain eigenvector status @ Minimum Phase Field: ",eigenvector1FieldsA[PF_min_i],eigenvector2FieldsA[PF_min_i],eigenvector3FieldsA[PF_min_i]
+
+       MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[PF_min_X, MPI.DOUBLE], op=MPI.MAX) 
+       MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[PF_min_Y, MPI.DOUBLE], op=MPI.MAX) 
+       MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[Vol_Stress_at_PF_min, MPI.DOUBLE], op=MPI.MAX) 
+       MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[Dev_Stress_at_PF_min, MPI.DOUBLE], op=MPI.MAX)
+       MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[Vol_Strain_at_PF_min, MPI.DOUBLE], op=MPI.MAX) 
+       MPI.COMM_WORLD.Allreduce(MPI.IN_PLACE,[Dev_Strain_at_PF_min, MPI.DOUBLE], op=MPI.MAX)  
+       
        if rank_id==0:
-           print "Phase Field Minimum Value: ",PF_min[0], "Maximum Phase Field Change: ",PF_change_max[0],PhaseFieldA[PF_change_maxi]
+           print "Phase Field Minimum Value: ",PF_min[0]
+           print "Stress and strain invariants are: ",Vol_Stress_at_PF_min[0] ,Dev_Stress_at_PF_min[0], Vol_Strain_at_PF_min[0],Dev_Strain_at_PF_min[0]
+           print "Maximum Phase Field Change: ",PF_change_max[0]
        if mid_iter>MidIterUpLimit:
            mid_loop_flag[0] = 0
     
@@ -1187,19 +1237,14 @@ for nstep in range(0,numSteps):
        for i in range(0,Count):
            #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
            #eta1FieldsA[i]=Lamda_local[i]*PhaseFieldA[i]**2.0
-           if SymFlag==1:
-               etaFieldsA[i]=G_local[i]
-               eta1FieldsA[i]=Lamda_local[i]
-               #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-               #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-           #elif V_flag[i]==0:
+           #if SymFlag==1:
            #    etaFieldsA[i]=G_local[i]
            #    eta1FieldsA[i]=Lamda_local[i]
-           #    #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-           #    #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
-           else :
-               etaFieldsA[i]=G_local[i]
-               eta1FieldsA[i]=Lamda_local[i]
+               #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+               #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
+           #else :
+           #    etaFieldsA[i]=G_local[i]
+           #    eta1FieldsA[i]=Lamda_local[i]
                #etaFieldsA[i]=G_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                #eta1FieldsA[i]=Lamda_local[i]*(PhaseFieldA[i]**2.0+StiffnessResidual)
                #eta1FieldsA[i]=Lamda_local[i]+G_local[i]*2.0/3.0*(1-(PhaseFieldA[i]**2.0+StiffnessResidual))
@@ -1236,8 +1281,8 @@ for nstep in range(0,numSteps):
            writer_structure_iter.finish() 
            Total_count = Total_count +1
        if rank_id == 0 :
-           t1 = time.time()
-           print "TIME ELAPSE: ",t1-t0
+           t2 = time.time()
+           print "TIME ELAPSE: ",t2-t0
            #write intermediate status file
            ss_structure.write(str(Displacement) + " " + str(LoadingTop[0]) + " "+ str(LoadingRight[0]) + " " +str(LoadingLeft[0])+ " " +str(LoadingBottom[0])+ " "  + str(t1-t0) + " " +str(Max_Vol_Stress[0])+ " "+str(Max_Dev_Stress[0])+ " "+ str(PF_min[0]) + " "+ str(PF_change_max[0]) +"\n")
            ss_structure.flush()  

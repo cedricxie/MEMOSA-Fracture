@@ -51,6 +51,11 @@ struct StructureVC : public FloatVarDict<T>
       this->defineVar("eta1old",T(1.0));
       this->defineVar("density",T(1.0));
       this->defineVar("alpha",T(1.0));
+      this->defineVar("C11",T(1.0));
+      this->defineVar("C12",T(1.0));
+      this->defineVar("C13",T(1.0));
+      this->defineVar("C33",T(1.0));
+      this->defineVar("C44",T(1.0));
       this->defineVar("pfv",T(1.0));
       this->defineVar("pfperfect",T(0.0));
       this->defineVar("structcoef1",T(1.0));

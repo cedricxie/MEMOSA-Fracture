@@ -20,6 +20,11 @@ struct StructureFields
   Field etaold;
   Field eta1;
   Field eta1old;
+  Field C11;
+  Field C12;
+  Field C13;
+  Field C33;
+  Field C44;
   Field alpha;
   Field density;
   Field deformationN1;
