@@ -453,6 +453,7 @@ smodel.init()
 soptions.transient = False
 soptions.creep = False
 soptions.thermo = True
+soptions.residualStress = True
 ##########################################################################################
 # Model Initialization
 ##########################################################################################

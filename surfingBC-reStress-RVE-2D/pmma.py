@@ -194,12 +194,12 @@ def decomposeStrainTensor (strX,strY,strZ,evalue,evector1,evector2,evector3,i,pf
 ##########################################################################################   
 # parameter set up
  ########################################################################################## 
-#square-300-by-300-2D-noCrack
-beamTop = 6
-beamBot = 2
-beamLeft = 4
-beamRight = 5
-IDs = (2, 4, 5, 6)
+#single-fiber-mesh
+beamTop = 5
+beamBot = 3
+beamLeft = 6
+beamRight = 4
+IDs = (3, 4, 5, 6)
 BoundaryPositionTop = 6e-6 - 6e-6/300.0 #Top
 BoundaryPositionRight = 6e-6 - 6e-6/300.0 #Right
 BoundaryPositionLeft = 6e-6/300.0
@@ -217,11 +217,11 @@ numtimeSteps = 1               # Number of timesteps in global combined solution
 numStructIterations = 10       # Number of iterations for structure model, automatically set to 1 when StructIterFlag == 0
 numPFIterations = 10           # Number of iterations for fracture model
 E = 2.483e9                    # Matrix Young's Modulus
-E_fiber=19.5e9                 # Fiber Young's Modulus
+E_fiber=19.5e9                 # Fiber Young's Modulus 19.5e9
 alpha = 70e-6
 alpha_fiber = 5e-6
 nu = 0.33                      # Matrix Poisson's ratio
-nu_fiber=0.28                  # Fiber Poisson's ratio
+nu_fiber=0.28                  # Fiber Poisson's ratio 0.28
 G = E/2.0/(1+nu)               # Shear Modulus
 K = E/3.0/(1-2.0*nu)
 Lamda = nu*E/(1+nu)/(1-2.0*nu) # Lamda
@@ -231,7 +231,7 @@ cFED = 2.9e6*4.0*36e-6          # critical fracture energy density, J/m^2
 crackPF = 1e-3			       # Phase Field Value at Crack
 crackSpeed = 2.0
 StiffnessResidual = 1e-5       #Used to have a lower bound of the material constant for damaged cell
-planeStatus = 1                #Plane Strain: 1 Plane Stress: 2
+planeStatus = 2                #Plane Strain: 1 Plane Stress: 2
 Cv=8.0/3.0
 PFModelFlag = 0                #0: second order 1: first order with cap 2: first order without cap
 iniTemp =300
@@ -246,7 +246,7 @@ DispStep = 0.01*DeformUnit	   # Displacement Step
 StressStep = 48e4
 KI = 9e5
 LoadCoef = 0.0000000001
-TempStep = 50
+TempStep = 0
 
 OInterval_s = 1                  #Output interval for equilibrium status
 OInterval_l = 1
@@ -271,6 +271,9 @@ SymFlag = 1 # 1--Symmetric 0--Asymmetric
 
 NumofFiber = 1
 fiber_file_name = "fiber"+".txt" 
+
+reStressFlag = 1
+reStress_file_name = "residualStress"+".txt" 
 
 structure_file_name = "structure" + ".dat"
 inter_status_file_name = "inter-status" + ".dat"
@@ -497,6 +500,7 @@ smodel.init()
 soptions.transient = False
 soptions.creep = False
 soptions.thermo = True
+soptions.residualStress = True
 ##########################################################################################
 # Model Initialization
 ##########################################################################################
@@ -560,12 +564,14 @@ ElasticEnergyField = []
 fractureToughnessField = []
 Strain_ZZ = []
 Sigma_ZZ = []
+
 compress_found_flag  = array([0.0])
 struct_outer_tol_flag = array([0.0])
 struct_outer_flag = array([0.0])
 struct_inner_flag = array([0.0])
 fract_inner_flag = array([0.0])
 mid_loop_flag = array([0.0])
+
 PF_min = array([1.0])
 PF_min_X = array([0.0])
 PF_min_Y = array([0.0])
@@ -582,10 +588,47 @@ Local_MDStress=0
 Local_MVStrain=0
 Local_MDStrain=0
 
+reStressXXGlobal = []
+reStressXYGlobal = []
+reStressXZGlobal = []
+reStressYYGlobal = []
+reStressYZGlobal = []
+reStressZZGlobal = []
+
 for n in range(0,nmesh):
     cellSitesLocal.append(meshes[n].getCells() )
     Count = cellSitesLocal[n].getCount()
     selfCount = cellSitesLocal[n].getSelfCount()
+    
+    localToGlobalA = meshes[n].getLocalToGlobalPtr().asNumPyArray()
+    
+    reStressXXFields = structureFields.reStressXX[cellSitesLocal[n]]
+    reStressXXFieldsA = reStressXXFields.asNumPyArray() 
+    reStressXYFields = structureFields.reStressXY[cellSitesLocal[n]]
+    reStressXYFieldsA = reStressXYFields.asNumPyArray() 
+    reStressXZFields = structureFields.reStressXZ[cellSitesLocal[n]]
+    reStressXZFieldsA = reStressXZFields.asNumPyArray() 
+    reStressYYFields = structureFields.reStressYY[cellSitesLocal[n]]
+    reStressYYFieldsA = reStressYYFields.asNumPyArray() 
+    reStressYZFields = structureFields.reStressYZ[cellSitesLocal[n]]
+    reStressYZFieldsA = reStressYZFields.asNumPyArray() 
+    reStressZZFields = structureFields.reStressZZ[cellSitesLocal[n]]
+    reStressZZFieldsA = reStressZZFields.asNumPyArray() 
+    
+    if rank_id == 0:
+        print "Total number of Cells: ", Count,selfCount
+    
+    if reStressFlag == 1:
+        f_reStress = open( reStress_file_name, "r" )
+        reStressCount = 0
+        for line in f_reStress:
+            line_s =line.split()
+            reStressXXGlobal.append(float(line_s[1])*1e6)
+            reStressYYGlobal.append(float(line_s[2])*1e6)
+            reStressZZGlobal.append(float(line_s[3])*1e6)
+            reStressXYGlobal.append(float(line_s[4])*1e6)
+            reStressCount = reStressCount + 1
+
     coord=geomFields.coordinate[cellSitesLocal[n]]
     coordA=coord.asNumPyArray()
     volume=geomFields.volume[cellSitesLocal[n]]
@@ -609,6 +652,14 @@ for n in range(0,nmesh):
     alphaFieldsA = alphaFields.asNumPyArray() 
 
     for i in range(0,Count):
+        
+        #print i, localToGlobalA[i]
+        if localToGlobalA[i] < reStressCount and reStressFlag == 1:
+            reStressXXFieldsA[i] = reStressXXGlobal[localToGlobalA[i]]
+            reStressYYFieldsA[i] = reStressYYGlobal[localToGlobalA[i]]
+            reStressZZFieldsA[i] = reStressZZGlobal[localToGlobalA[i]]
+            reStressXYFieldsA[i] = reStressXYGlobal[localToGlobalA[i]]
+
 ################Pre-defined crack#####################
         PFHistoryField.append(1.0)
         #if (coordA[i,0]-0.0) > 0.0 and\
@@ -678,23 +729,22 @@ for n in range(0,nmesh):
 
         for fiber_count in range(0,NumofFiber) :
             if((coordA[i,0]-fiber_x[fiber_count])**2+\
-            (coordA[i,1]-fiber_y[fiber_count])**2)<fiber_r[fiber_count]**2:
+            (coordA[i,1]-fiber_y[fiber_count])**2)<(fiber_r[fiber_count]*1.00)**2:
                 E_local[i]=E_fiber
                 nu_local[i]=nu_fiber
-                if planeStatus == 1: 
-                    K_local[i]=E_local[i]/3.0/(1-2.0*nu_local[i])
-                    Lamda_local[i]=(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
+                K_local[i]=E_local[i]/3.0/(1-2.0*nu_local[i])
+                G_local[i]=(E_local[i]/(2.*(1+nu_local[i])))
+                Lamda_local[i]=(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-2.0*nu_local[i]) )
                 if planeStatus == 2:
                     K_local[i]=9.0*K_local[i]*G_local[i]/(3.0*K_local[i]+4.0*G_local[i])
                     Lamda_local[i]=(E_local[i]*nu_local[i]/(1+nu_local[i])/(1-1.0*nu_local[i]) )
-                G_local[i]=(E_local[i]/(2.*(1+nu_local[i])))
                 
                 etaFieldsA[i]=G_local[i]
                 eta1FieldsA[i]=Lamda_local[i]
                 
                 fractureToughnessField[i]=cFED*5.0
                 alphaFieldsA[i] = alpha_fiber
-                
+                                
 if rank_id == 0:
    print "Ending model initialization"
    t1 = time.time()

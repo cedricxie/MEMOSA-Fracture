@@ -39,6 +39,12 @@ StructureFields::StructureFields(const string baseName) :
   eigenvalue(baseName + ".eigenvalue"),
   eigenvector1(baseName + ".eigenvector1"),
   eigenvector2(baseName + ".eigenvector2"),
-  eigenvector3(baseName + ".eigenvector3")
+  eigenvector3(baseName + ".eigenvector3"),
+  reStressXX(baseName + ".reStressXX"),
+  reStressXY(baseName + ".reStressXY"),
+  reStressXZ(baseName + ".reStressXZ"),
+  reStressYY(baseName + ".reStressYY"),
+  reStressYZ(baseName + ".reStressYZ"),
+  reStressZZ(baseName + ".reStressZZ")
 {}
 

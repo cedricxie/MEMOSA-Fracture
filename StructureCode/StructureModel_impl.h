@@ -711,6 +711,30 @@ public:
         initialEigenvector3[2] = _options["initialEigenvector3Z"];
         *eigenvector3Cell = initialEigenvector3;
         _structureFields.eigenvector3.addArray(cells,eigenvector3Cell);
+        
+        shared_ptr<TArray> reStressXXCell(new TArray(cells.getCountLevel1()));
+        *reStressXXCell = _options["reStressXX"];
+        _structureFields.reStressXX.addArray(cells,reStressXXCell);
+        
+        shared_ptr<TArray> reStressXYCell(new TArray(cells.getCountLevel1()));
+        *reStressXYCell = _options["reStressXY"];
+        _structureFields.reStressXY.addArray(cells,reStressXYCell);
+        
+        shared_ptr<TArray> reStressXZCell(new TArray(cells.getCountLevel1()));
+        *reStressXZCell = _options["reStressXZ"];
+        _structureFields.reStressXZ.addArray(cells,reStressXZCell);
+        
+        shared_ptr<TArray> reStressYYCell(new TArray(cells.getCountLevel1()));
+        *reStressYYCell = _options["reStressYY"];
+        _structureFields.reStressYY.addArray(cells,reStressYYCell);
+        
+        shared_ptr<TArray> reStressYZCell(new TArray(cells.getCountLevel1()));
+        *reStressYZCell = _options["reStressYZ"];
+        _structureFields.reStressYZ.addArray(cells,reStressYZCell);
+
+        shared_ptr<TArray> reStressZZCell(new TArray(cells.getCountLevel1()));
+        *reStressZZCell = _options["reStressZZ"];
+        _structureFields.reStressZZ.addArray(cells,reStressZZCell);
 
         if (_options.transient)
         {
@@ -1456,6 +1480,12 @@ public:
 	      _options["residualXXStress"],
 	      _options["residualYYStress"],
 	      _options["residualZZStress"],
+	      _structureFields.reStressXX,
+	      _structureFields.reStressXY,
+	      _structureFields.reStressXZ,
+	      _structureFields.reStressYY,
+	      _structureFields.reStressYZ,
+	      _structureFields.reStressZZ,
 	      _options.thermo,
 	      _options.residualStress));
       
@@ -1863,6 +1893,13 @@ public:
       const VectorT3Array& eigenvector2 = dynamic_cast<const VectorT3Array&>(_structureFields.eigenvector2[cells]);
       const VectorT3Array& eigenvector3 = dynamic_cast<const VectorT3Array&>(_structureFields.eigenvector3[cells]);
       
+      const TArray& reStressXX = dynamic_cast<const TArray&>(_structureFields.reStressXX[cells]);
+      const TArray& reStressXY = dynamic_cast<const TArray&>(_structureFields.reStressXY[cells]);
+      const TArray& reStressXZ = dynamic_cast<const TArray&>(_structureFields.reStressXZ[cells]);
+      const TArray& reStressYY = dynamic_cast<const TArray&>(_structureFields.reStressYY[cells]);
+      const TArray& reStressYZ = dynamic_cast<const TArray&>(_structureFields.reStressYZ[cells]);
+      const TArray& reStressZZ = dynamic_cast<const TArray&>(_structureFields.reStressZZ[cells]);
+      
       const TArray& temperature = dynamic_cast<const TArray&>(_structureFields.temperature[cells]);
       
       const T two(2.0);
@@ -1913,9 +1950,22 @@ public:
             
 	  if(_options.residualStress)
 	  {
-	      tractionX[n][0] += _options["residualXXStress"];
-	      tractionY[n][1] += _options["residualYYStress"];
-	      tractionZ[n][2] += _options["residualZZStress"];
+	      //tractionX[n][0] += _options["residualXXStress"];
+	      //tractionY[n][1] += _options["residualYYStress"];
+	      //tractionZ[n][2] += _options["residualZZStress"];
+	      
+	      tractionX[n][0] += reStressXX[n];
+	      tractionX[n][1] += reStressXY[n];
+	      tractionX[n][2] += reStressXZ[n];
+
+	      tractionY[n][0] += reStressXY[n];
+	      tractionY[n][1] += reStressYY[n];
+	      tractionY[n][2] += reStressYZ[n];
+
+	      tractionZ[n][0] += reStressXZ[n];
+	      tractionZ[n][1] += reStressYZ[n];
+	      tractionZ[n][2] += reStressZZ[n];	      
+	      
 	  }
 
 	  if(_options.thermo)

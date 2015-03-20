@@ -71,6 +71,12 @@ struct StructureModelOptions : public FloatVarDict<T>
     this->defineVar("residualXXStress",T(0.));
     this->defineVar("residualYYStress",T(0.));
     this->defineVar("residualZZStress",T(0.));
+    this->defineVar("reStressXX",T(0.));
+    this->defineVar("reStressXY",T(0.));
+    this->defineVar("reStressXZ",T(0.));
+    this->defineVar("reStressYY",T(0.));
+    this->defineVar("reStressYZ",T(0.));
+    this->defineVar("reStressZZ",T(0.));
     this->defineVar("initialEigenvalue1",T(0.0));
     this->defineVar("initialEigenvalue2",T(0.0));
     this->defineVar("initialEigenvalue3",T(0.0));

@@ -54,6 +54,12 @@ public:
 				const T& residualXXStress,
 				const T& residualYYStress,
 				const T& residualZZStress,
+				const Field& reStressXXField,
+				const Field& reStressXYField,
+				const Field& reStressXZField,
+				const Field& reStressYYField,
+				const Field& reStressYZField,
+				const Field& reStressZZField,
 				const bool& thermo,
 				const bool& residualStress,
                                 bool fullLinearization=true)  :
@@ -76,6 +82,12 @@ public:
     _residualXXStress(residualXXStress),
     _residualYYStress(residualYYStress),
     _residualZZStress(residualZZStress),
+    _reStressXXField(reStressXXField),
+    _reStressXYField(reStressXYField),
+    _reStressXZField(reStressXZField),
+    _reStressYYField(reStressYYField),
+    _reStressYZField(reStressYZField),
+    _reStressZZField(reStressZZField),
     _thermo(thermo),
     _residualStress(residualStress),
     _fullLinearization(fullLinearization)
@@ -163,6 +175,19 @@ public:
     const TArray& pfvCell =
       dynamic_cast<const TArray&>(_pfvField[cells]);
       
+    const TArray& reStressXXCell =
+      dynamic_cast<const TArray&>(_reStressXXField[cells]);
+    const TArray& reStressXYCell =
+      dynamic_cast<const TArray&>(_reStressXYField[cells]);
+    const TArray& reStressXZCell =
+      dynamic_cast<const TArray&>(_reStressXZField[cells]);
+    const TArray& reStressYYCell =
+      dynamic_cast<const TArray&>(_reStressYYField[cells]);
+    const TArray& reStressYZCell =
+      dynamic_cast<const TArray&>(_reStressYZField[cells]);
+    const TArray& reStressZZCell =
+      dynamic_cast<const TArray&>(_reStressZZField[cells]);
+      
     const VectorT3Array& eigenvalueCell =
       dynamic_cast<const VectorT3Array&>(_eigenvalueField[cells]);
     
@@ -223,6 +248,13 @@ public:
         T faceAlpha(1.0);
         T faceTemperature(1.0);
         
+        T faceReStressXX(1.0);
+        T faceReStressXY(1.0);
+        T faceReStressXZ(1.0);
+        T faceReStressYY(1.0);
+        T faceReStressYZ(1.0);
+        T faceReStressZZ(1.0);
+        
         VectorT3 faceEigenvalue11;
         VectorT3 faceEigenvalue12;
         VectorT3 faceEigenvalue13;
@@ -263,6 +295,13 @@ public:
         faceLambdaOld = lambdaoldCell[c0]*wt0 + lambdaoldCell[c1]*wt1;
         faceAlpha = alphaCell[c0]*wt0 + alphaCell[c1]*wt1;
         faceTemperature = temperatureCell[c0]*wt0 + temperatureCell[c1]*wt1;
+        
+        faceReStressXX = reStressXXCell[c0]*wt0 + reStressXXCell[c1]*wt1;
+        faceReStressXY = reStressXYCell[c0]*wt0 + reStressXYCell[c1]*wt1;
+        faceReStressXZ = reStressXZCell[c0]*wt0 + reStressXZCell[c1]*wt1;
+        faceReStressYY = reStressYYCell[c0]*wt0 + reStressYYCell[c1]*wt1;
+        faceReStressYZ = reStressYZCell[c0]*wt0 + reStressYZCell[c1]*wt1;
+        faceReStressZZ = reStressZZCell[c0]*wt0 + reStressZZCell[c1]*wt1;
         
         /*faceEigenvalue11[0]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][0]*eigenvector1Cell[c0][0]*eigenvector1Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][0]*eigenvector1Cell[c1][0]*eigenvector1Cell[c1][0]*wt1;
         faceEigenvalue11[1]=2.0*(1.0-pfvCell[c0]*pfvCell[c0])*eigenvalueCell[c0][1]*eigenvector2Cell[c0][0]*eigenvector2Cell[c0][0]*wt0 + 2.0*(1.0-pfvCell[c1]*pfvCell[c1])*eigenvalueCell[c1][1]*eigenvector2Cell[c1][0]*eigenvector2Cell[c1][0]*wt1;
@@ -351,9 +390,13 @@ public:
 
 	if(_residualStress)
 	{
-	    residualSource[0] = _residualXXStress*Af[0];
-	    residualSource[1] = _residualYYStress*Af[1];
-	    residualSource[2] = _residualZZStress*Af[2];
+	    //residualSource[0] = _residualXXStress*Af[0];
+	    //residualSource[1] = _residualYYStress*Af[1];
+	    //residualSource[2] = _residualZZStress*Af[2];
+	    
+	    residualSource[0] = faceReStressXX*Af[0]+faceReStressXY*Af[1]+faceReStressXZ*Af[2];
+	    residualSource[1] = faceReStressXY*Af[0]+faceReStressYY*Af[1]+faceReStressYZ*Af[2];
+	    residualSource[2] = faceReStressXZ*Af[0]+faceReStressYZ*Af[1]+faceReStressZZ*Af[2];
 	}
         
         VectorT3 s0(NumTypeTraits<VectorT3>::getZero());
@@ -533,6 +576,12 @@ private:
   const T _residualXXStress;
   const T _residualYYStress;
   const T _residualZZStress;
+  const Field& _reStressXXField;  
+  const Field& _reStressXYField; 
+  const Field& _reStressXZField; 
+  const Field& _reStressYYField; 
+  const Field& _reStressYZField; 
+  const Field& _reStressZZField; 
   const bool _thermo;
   const bool _residualStress;
   const bool _fullLinearization; 
