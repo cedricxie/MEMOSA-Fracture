@@ -1,0 +1,8 @@
+#!/bin/sh -l
+# FILENAME:  run_py.sub
+
+cd $PBS_O_WORKDIR
+source /scratch/conte/x/xie45/SymKappaAllEigenvalueMu-Implicit/env-conte-mod.sh
+
+pwd
+mpirun -np 16 python ./pmma.py square-600-by-300-2D-noCrack.cas --type quad > pmma.out
