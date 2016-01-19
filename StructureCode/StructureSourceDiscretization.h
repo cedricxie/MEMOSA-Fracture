@@ -44,7 +44,7 @@ public:
 				const Field& lambdaoldField,
 				const Field& C11Field,
 				const Field& C12Field,
-				const Field& C13Field,
+				const Field& C23Field,
 				const Field& C33Field,
 				const Field& C44Field,
 				const Field& alphaField,
@@ -74,7 +74,7 @@ public:
     _lambdaoldField(lambdaoldField),
     _C11Field(C11Field),
     _C12Field(C12Field),
-    _C13Field(C13Field),
+    _C23Field(C23Field),
     _C33Field(C33Field),
     _C44Field(C44Field),
     _alphaField(alphaField),
@@ -177,8 +177,8 @@ public:
       dynamic_cast<const TArray&>(_C11Field[cells]);
     const TArray& C12Cell =
       dynamic_cast<const TArray&>(_C12Field[cells]);
-    const TArray& C13Cell =
-      dynamic_cast<const TArray&>(_C13Field[cells]);
+    const TArray& C23Cell =
+      dynamic_cast<const TArray&>(_C23Field[cells]);
     const TArray& C33Cell =
       dynamic_cast<const TArray&>(_C33Field[cells]);
     const TArray& C44Cell =
@@ -259,7 +259,7 @@ public:
 	    
 	    T faceC11(1.0);
 	    T faceC12(1.0);
-	    T faceC13(1.0);
+	    T faceC23(1.0);
 	    T faceC33(1.0);
 	    T faceC44(1.0);
 	    
@@ -309,7 +309,7 @@ public:
         
         faceC11 = C11Cell[c0]*wt0 + C11Cell[c1]*wt1;
         faceC12 = C12Cell[c0]*wt0 + C12Cell[c1]*wt1;
-        faceC13 = C13Cell[c0]*wt0 + C13Cell[c1]*wt1;
+        faceC23 = C23Cell[c0]*wt0 + C23Cell[c1]*wt1;
         faceC33 = C33Cell[c0]*wt0 + C33Cell[c1]*wt1;
         faceC44 = C44Cell[c0]*wt0 + C44Cell[c1]*wt1;
         
@@ -353,20 +353,22 @@ public:
 	source[2] = faceMu*(gradF[2][0]*Af[0] + gradF[2][1]*Af[1] + gradF[2][2]*Af[2])
           + faceLambda*divU*Af[2];
     
-    source[0] += (faceC13-faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector3Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector3Cell[c1][2]*wt1) * Af[0] 
-    			+ 0.0 * Af[1] 
+    source[0] += 0.0 * Af[0] 
+    			+ (2.0*faceC44-faceC11+faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector1Cell[c0][1]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector1Cell[c1][1]*wt1) * Af[1] 
     			+ (2.0*faceC44-faceC11+faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector1Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector1Cell[c1][2]*wt1) * Af[2];
     			
-    source[1] += 0.0 * Af[0] 
-    			+ (faceC13-faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector3Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector3Cell[c1][2]*wt1) * Af[1] 
-    			+ (2.0*faceC44-faceC11+faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector2Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector2Cell[c1][2]*wt1) * Af[2];
+    source[1] += (2.0*faceC44-faceC11+faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector1Cell[c0][1]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector1Cell[c1][1]*wt1) * Af[0] 
+    			+ (
+    			(faceC33-faceC11)*(pfvCell[c0]*pfvCell[c0]*eigenvector2Cell[c0][1]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector2Cell[c1][1]*wt1) 
+    			+ (faceC23-faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector3Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector3Cell[c1][2]*wt1) 
+    			) *  Af[1] 
+    			+ (faceC33-faceC23-faceC11+faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector2Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector2Cell[c1][2]*wt1) * Af[2];
     			
     source[2] += (2.0*faceC44-faceC11+faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector1Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector1Cell[c1][2]*wt1) * Af[0] 
-    			+ (2.0*faceC44-faceC11+faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector2Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector2Cell[c1][2]*wt1) * Af[1] 
+    			+ (faceC33-faceC23-faceC11+faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector2Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector2Cell[c1][2]*wt1) * Af[1] 
     			+ (
-    			  (faceC13-faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector1Cell[c0][0]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector1Cell[c1][0]*wt1)
-    			+ (faceC13-faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector2Cell[c0][1]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector2Cell[c1][1]*wt1)
-    			+ (faceC33-faceC11)*(pfvCell[c0]*pfvCell[c0]*eigenvector3Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector3Cell[c1][2]*wt1)
+    			  (faceC33-faceC11)*(pfvCell[c0]*pfvCell[c0]*eigenvector3Cell[c0][2]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector3Cell[c1][2]*wt1)
+    			+ (faceC23-faceC12)*(pfvCell[c0]*pfvCell[c0]*eigenvector2Cell[c0][1]*wt0+pfvCell[c1]*pfvCell[c1]*eigenvector2Cell[c1][1]*wt1)
     			) * Af[2];
     
     source[0] -= faceStructcoef2*faceMuOld*(faceEigenvalue11[0]*Af[0] +faceEigenvalue21[0]*Af[1] + faceEigenvalue31[0]*Af[2]);
@@ -573,7 +575,7 @@ private:
   const Field& _lambdaoldField;
   const Field& _C11Field;
   const Field& _C12Field;
-  const Field& _C13Field;
+  const Field& _C23Field;
   const Field& _C33Field;
   const Field& _C44Field;
   const Field& _alphaField;

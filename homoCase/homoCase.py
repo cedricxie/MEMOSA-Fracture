@@ -219,7 +219,7 @@ Lamda = nu*E/(1+nu)/(1-2.0*nu) # Lamda
 
 C11 = 2.0e9
 C12 = 1.0e9
-C13 = 1.5e9
+C23 = 1.5e9
 C33 = 9.0e9
 C44 = 3.0e9
 
@@ -238,7 +238,7 @@ else :
 
 DeformUnit = (cFED*BoundaryPositionTop/Lamda)**0.5  #Normalized Displacement Unit
 #DispStep = 0.02*DeformUnit	   # Displacement Step
-DispStep = 1e-8
+DispStep = 1e-6
 StressStep = 1e6
 LoadCoef = -0.0
 
@@ -350,11 +350,11 @@ StructurebcMap = smodel.getBCMap()
 for id in [beamRight]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        bc.bcType = 'Symmetry'
-        #bc.bcType = 'SymmetryModified'
-        #bc['specifiedXDeformation'] = 0
-        #bc['specifiedYDeformation'] = 0
-        #bc['specifiedZDeformation'] = 0
+        #bc.bcType = 'Symmetry'
+        bc.bcType = 'SymmetryModified'
+        bc['specifiedXDeformation'] = 0
+        bc['specifiedYDeformation'] = 0
+        bc['specifiedZDeformation'] = 0
         #bc.bcType = 'SpecifiedTraction'
         #bc['specifiedXXTraction'] = 0
         #bc['specifiedYXTraction'] = 0
@@ -403,11 +403,11 @@ for id in [beamBack]:
 for id in [beamFront]:
     if id in StructurebcMap:
         bc = StructurebcMap[id]
-        #bc.bcType = 'Symmetry'
-        bc.bcType = 'SymmetryModified'
-        bc['specifiedXDeformation'] = 0
-        bc['specifiedYDeformation'] = 0
-        bc['specifiedZDeformation'] = 0
+        bc.bcType = 'Symmetry'
+        #bc.bcType = 'SymmetryModified'
+        #bc['specifiedXDeformation'] = 0
+        #bc['specifiedYDeformation'] = 0
+        #bc['specifiedZDeformation'] = 0
         #bc.bcType = 'SpecifiedTraction'
         #bc['specifiedXZTraction'] = 0
         #bc['specifiedYZTraction'] = 0
@@ -424,7 +424,7 @@ for i,vc in vcMap.iteritems():
     
     vc['C11'] = C11
     vc['C12'] = C12
-    vc['C13'] = C13
+    vc['C23'] = C23
     vc['C33'] = C33
     vc['C44'] = C44
     
@@ -588,8 +588,8 @@ for n in range(0,nmesh):
     C11FieldsA = C11Fields.asNumPyArray() 
     C12Fields = structureFields.C12[cellSitesLocal[n]]
     C12FieldsA = C12Fields.asNumPyArray() 
-    C13Fields = structureFields.C13[cellSitesLocal[n]]
-    C13FieldsA = C13Fields.asNumPyArray() 
+    C23Fields = structureFields.C23[cellSitesLocal[n]]
+    C23FieldsA = C23Fields.asNumPyArray() 
     C33Fields = structureFields.C33[cellSitesLocal[n]]
     C33FieldsA = C33Fields.asNumPyArray() 
     C44Fields = structureFields.C44[cellSitesLocal[n]]
@@ -682,15 +682,15 @@ for nstep in range(0,numSteps):
    #        bc = StructurebcMap[id]
    #        #bc['specifiedYYTraction'] = LoadCoef*ExternalStress
    #        bc['specifiedYDeformation'] = Displacement
-   for id in [beamFront]:
-       if id in StructurebcMap:
-           bc = StructurebcMap[id]
-           bc['specifiedZDeformation'] = Displacement
-   #        bc['specifiedZZTraction'] = ExternalStress
-   #for id in [beamRight]:
+   #for id in [beamFront]:
    #    if id in StructurebcMap:
    #        bc = StructurebcMap[id]
-   #        bc['specifiedXDeformation'] = Displacement
+   #        bc['specifiedZDeformation'] = Displacement
+   #        bc['specifiedZZTraction'] = ExternalStress
+   for id in [beamRight]:
+       if id in StructurebcMap:
+           bc = StructurebcMap[id]
+           bc['specifiedXDeformation'] = Displacement
    #        bc['specifiedXXTraction'] = ExternalStress
    #for id in [beamBot]:
    #    if id in StructurebcMap:
@@ -944,13 +944,13 @@ for nstep in range(0,numSteps):
 
            if SymFlag==1:
                if strain_trace[i] >0:
-                   ElasticEnergyField[i] = 0.5*C11FieldsA[i]*(strainXFieldsA[i][0]**2.0+strainYFieldsA[i][1]**2.0+C33FieldsA[i]/C11FieldsA[i]*strainZFieldsA[i][2]**2.0)\
-                                        + C12FieldsA[i]*(strainXFieldsA[i][0]*strainYFieldsA[i][1]+C13FieldsA[i]/C12FieldsA[i]*strainXFieldsA[i][0]*strainZFieldsA[i][2]+C13FieldsA[i]/C12FieldsA[i]*strainYFieldsA[i][1]*strainZFieldsA[i][2])\
-                                        + C44FieldsA[i]*(strainYFieldsA[i][2]**2.0+strainXFieldsA[i][2]**2.0)+0.5*(C11FieldsA[i]-C12FieldsA[i])*strainXFieldsA[i][1]**2.0
+                   ElasticEnergyField[i] = 0.5*C11FieldsA[i]*(strainXFieldsA[i][0]**2.0+C33FieldsA[i]/C11FieldsA[i]*strainYFieldsA[i][1]**2.0+C33FieldsA[i]/C11FieldsA[i]*strainZFieldsA[i][2]**2.0)\
+                                        + C12FieldsA[i]*(strainXFieldsA[i][0]*strainYFieldsA[i][1]+strainXFieldsA[i][0]*strainZFieldsA[i][2]+C23FieldsA[i]/C12FieldsA[i]*strainYFieldsA[i][1]*strainZFieldsA[i][2])\
+                                        + 0.5*(C33FieldsA[i]-C23FieldsA[i])*strainYFieldsA[i][2]**2.0+ C44FieldsA[i]*(strainXFieldsA[i][1]**2.0+strainXFieldsA[i][2]**2.0)
                else: 
-                   ElasticEnergyField[i] = 0.5*C11FieldsA[i]*(strainXFieldsA[i][0]**2.0+strainYFieldsA[i][1]**2.0+C33FieldsA[i]/C11FieldsA[i]*strainZFieldsA[i][2]**2.0)\
-                                        + C12FieldsA[i]*(strainXFieldsA[i][0]*strainYFieldsA[i][1]+C13FieldsA[i]/C12FieldsA[i]*strainXFieldsA[i][0]*strainZFieldsA[i][2]+C13FieldsA[i]/C12FieldsA[i]*strainYFieldsA[i][1]*strainZFieldsA[i][2])\
-                                        + C44FieldsA[i]*(strainYFieldsA[i][2]**2.0+strainXFieldsA[i][2]**2.0)+0.5*(C11FieldsA[i]-C12FieldsA[i])*strainXFieldsA[i][1]**2.0
+                   ElasticEnergyField[i] = 0.5*C11FieldsA[i]*(strainXFieldsA[i][0]**2.0+C33FieldsA[i]/C11FieldsA[i]*strainYFieldsA[i][1]**2.0+C33FieldsA[i]/C11FieldsA[i]*strainZFieldsA[i][2]**2.0)\
+                                        + C12FieldsA[i]*(strainXFieldsA[i][0]*strainYFieldsA[i][1]+strainXFieldsA[i][0]*strainZFieldsA[i][2]+C23FieldsA[i]/C12FieldsA[i]*strainYFieldsA[i][1]*strainZFieldsA[i][2])\
+                                        + 0.5*(C33FieldsA[i]-C23FieldsA[i])*strainYFieldsA[i][2]**2.0+ C44FieldsA[i]*(strainXFieldsA[i][1]**2.0+strainXFieldsA[i][2]**2.0)
                if i==100:
                    print i,ElasticEnergyField[i],eigenvalueFieldsA[i]
                    print strainXFieldsA[i],strainYFieldsA[i],strainZFieldsA[i]

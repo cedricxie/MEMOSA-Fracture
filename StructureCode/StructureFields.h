@@ -22,7 +22,7 @@ struct StructureFields
   Field eta1old;
   Field C11;
   Field C12;
-  Field C13;
+  Field C23;
   Field C33;
   Field C44;
   Field alpha;

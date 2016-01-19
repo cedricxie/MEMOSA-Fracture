@@ -15,7 +15,7 @@ StructureFields::StructureFields(const string baseName) :
   eta1old(baseName + ".eta1old"),
   C11(baseName + ".C11"),
   C12(baseName + ".C12"),
-  C13(baseName + ".C13"),
+  C23(baseName + ".C23"),
   C33(baseName + ".C33"),
   C44(baseName + ".C44"),
   alpha(baseName + ".alpha"),
